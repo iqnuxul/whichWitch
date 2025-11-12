@@ -1,0 +1,226 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * @title CreationManager
+ * @notice Manages registration of original and derivative works, maintains creation tree structure
+ * @dev Stores work relationships and metadata references on-chain
+ */
+contract CreationManager {
+    // Custom errors
+    error WorkNotFound(uint256 workId);
+    error InvalidParentWork(uint256 parentId);
+    error NotAuthorized(address user, uint256 workId);
+    error InvalidLicenseFee();
+    error InvalidAuthorizationManager();
+
+    // Work structure
+    struct Work {
+        uint256 id;
+        address creator;
+        uint256 parentId; // 0 for original works
+        uint256 licenseFee; // in wei
+        uint256 timestamp;
+        bool exists;
+    }
+
+    // State variables
+    mapping(uint256 => Work) public works;
+    mapping(address => uint256[]) public creatorWorks;
+    mapping(uint256 => uint256[]) public derivatives; // parentId => childIds
+    uint256 public nextWorkId = 1;
+
+    address public paymentManager;
+    address public authorizationManager;
+
+    // Events
+    event WorkRegistered(
+        uint256 indexed workId,
+        address indexed creator,
+        uint256 licenseFee,
+        string metadataURI,
+        uint256 timestamp
+    );
+
+    event DerivativeWorkRegistered(
+        uint256 indexed workId,
+        uint256 indexed parentId,
+        address indexed creator,
+        uint256 licenseFee,
+        string metadataURI,
+        uint256 timestamp
+    );
+
+    event AuthorizationManagerSet(address indexed authorizationManager);
+
+    /**
+     * @notice Constructor sets the PaymentManager address
+     * @param _paymentManager Address of the PaymentManager contract
+     */
+    constructor(address _paymentManager) {
+        require(_paymentManager != address(0), "Invalid payment manager");
+        paymentManager = _paymentManager;
+    }
+
+    /**
+     * @notice Sets the AuthorizationManager contract address
+     * @param _authorizationManager Address of the AuthorizationManager contract
+     * @dev Can only be set once after deployment
+     */
+    function setAuthorizationManager(address _authorizationManager) external {
+        if (_authorizationManager == address(0)) revert InvalidAuthorizationManager();
+        if (authorizationManager != address(0)) revert InvalidAuthorizationManager();
+
+        authorizationManager = _authorizationManager;
+        emit AuthorizationManagerSet(_authorizationManager);
+    }
+
+    /**
+     * @notice Registers a new original work
+     * @param licenseFee Fee in wei that others must pay to create derivatives
+     * @param metadataURI URI pointing to off-chain metadata (IPFS/Supabase)
+     * @return workId The ID of the newly registered work
+     */
+    function registerOriginalWork(uint256 licenseFee, string calldata metadataURI)
+        external
+        returns (uint256 workId)
+    {
+        workId = nextWorkId++;
+
+        works[workId] = Work({
+            id: workId,
+            creator: msg.sender,
+            parentId: 0, // 0 indicates original work
+            licenseFee: licenseFee,
+            timestamp: block.timestamp,
+            exists: true
+        });
+
+        creatorWorks[msg.sender].push(workId);
+
+        emit WorkRegistered(workId, msg.sender, licenseFee, metadataURI, block.timestamp);
+    }
+
+    /**
+     * @notice Registers a new derivative work
+     * @param parentId ID of the parent work
+     * @param licenseFee Fee in wei for others to create derivatives of this work
+     * @param metadataURI URI pointing to off-chain metadata
+     * @return workId The ID of the newly registered derivative work
+     */
+    function registerDerivativeWork(uint256 parentId, uint256 licenseFee, string calldata metadataURI)
+        external
+        returns (uint256 workId)
+    {
+        // Validate parent work exists
+        if (!works[parentId].exists) revert InvalidParentWork(parentId);
+
+        // Check authorization through AuthorizationManager
+        (bool success, bytes memory data) =
+            authorizationManager.call(abi.encodeWithSignature("hasAuthorization(address,uint256)", msg.sender, parentId));
+
+        if (!success || !abi.decode(data, (bool))) {
+            revert NotAuthorized(msg.sender, parentId);
+        }
+
+        workId = nextWorkId++;
+
+        works[workId] = Work({
+            id: workId,
+            creator: msg.sender,
+            parentId: parentId,
+            licenseFee: licenseFee,
+            timestamp: block.timestamp,
+            exists: true
+        });
+
+        creatorWorks[msg.sender].push(workId);
+        derivatives[parentId].push(workId);
+
+        emit DerivativeWorkRegistered(workId, parentId, msg.sender, licenseFee, metadataURI, block.timestamp);
+    }
+
+    /**
+     * @notice Gets the full ancestry chain for a work
+     * @param workId ID of the work to get chain for
+     * @return chain Array of work IDs from original work to specified work
+     * @dev Returns array where chain[0] is the original work and chain[length-1] is workId
+     */
+    function getWorkChain(uint256 workId) external view returns (uint256[] memory chain) {
+        if (!works[workId].exists) revert WorkNotFound(workId);
+
+        // First, count the chain length
+        uint256 length = 0;
+        uint256 currentId = workId;
+        while (currentId != 0) {
+            length++;
+            currentId = works[currentId].parentId;
+        }
+
+        // Build the chain array
+        chain = new uint256[](length);
+        currentId = workId;
+        for (uint256 i = length; i > 0; i--) {
+            chain[i - 1] = currentId;
+            currentId = works[currentId].parentId;
+        }
+
+        return chain;
+    }
+
+    /**
+     * @notice Gets the creators in the ancestry chain for a work
+     * @param workId ID of the work to get creator chain for
+     * @return creators Array of creator addresses from original to specified work
+     * @dev Used by PaymentManager for revenue distribution
+     */
+    function getCreatorChain(uint256 workId) external view returns (address[] memory creators) {
+        if (!works[workId].exists) revert WorkNotFound(workId);
+
+        // First, count the chain length
+        uint256 length = 0;
+        uint256 currentId = workId;
+        while (currentId != 0) {
+            length++;
+            currentId = works[currentId].parentId;
+        }
+
+        // Build the creators array
+        creators = new address[](length);
+        currentId = workId;
+        for (uint256 i = length; i > 0; i--) {
+            creators[i - 1] = works[currentId].creator;
+            currentId = works[currentId].parentId;
+        }
+
+        return creators;
+    }
+
+    /**
+     * @notice Gets all derivative works for a given work
+     * @param workId ID of the parent work
+     * @return Array of derivative work IDs
+     */
+    function getDerivatives(uint256 workId) external view returns (uint256[] memory) {
+        return derivatives[workId];
+    }
+
+    /**
+     * @notice Gets all works created by a specific address
+     * @param creator Address of the creator
+     * @return Array of work IDs created by the address
+     */
+    function getCreatorWorks(address creator) external view returns (uint256[] memory) {
+        return creatorWorks[creator];
+    }
+
+    /**
+     * @notice Gets work details
+     * @param workId ID of the work
+     * @return work The Work struct containing all work details
+     */
+    function getWork(uint256 workId) external view returns (Work memory work) {
+        if (!works[workId].exists) revert WorkNotFound(workId);
+        return works[workId];
+    }
+}

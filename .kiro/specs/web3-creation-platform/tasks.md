@@ -42,15 +42,15 @@
     - Implement getBalance function
     - _Requirements: 7.3_
 
-- [ ] 3. Implement CreationManager smart contract
-  - [ ] 3.1 Create CreationManager contract with core data structures
+- [x] 3. Implement CreationManager smart contract
+  - [x] 3.1 Create CreationManager contract with core data structures
     - Define Work struct with id, creator, parentId, licenseFee, timestamp, exists
     - Create mappings for works, creatorWorks, derivatives
     - Add nextWorkId counter
     - Store PaymentManager and AuthorizationManager addresses
     - _Requirements: 2.2, 9.1_
   
-  - [ ] 3.2 Implement original work registration
+  - [x] 3.2 Implement original work registration
     - Write registerOriginalWork function
     - Validate inputs and increment work ID
     - Create Work struct with parentId = 0
@@ -58,7 +58,7 @@
     - Emit WorkRegistered event with metadata URI
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
   
-  - [ ] 3.3 Implement derivative work registration
+  - [x] 3.3 Implement derivative work registration
     - Write registerDerivativeWork function
     - Call AuthorizationManager to verify user authorization
     - Revert with custom error if not authorized
@@ -67,30 +67,30 @@
     - Emit DerivativeWorkRegistered event
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
   
-  - [ ] 3.4 Implement work chain traversal
+  - [x] 3.4 Implement work chain traversal
     - Write getWorkChain function to traverse parent relationships
     - Return array from original work to specified work
     - Handle edge cases (invalid work ID, circular references)
     - _Requirements: 7.1_
   
-  - [ ] 3.5 Add query functions for work data
+  - [x] 3.5 Add query functions for work data
     - Implement getDerivatives function
     - Add getter functions for work details
     - _Requirements: 3.1, 3.4, 8.3_
   
-  - [ ] 3.6 Add setter for AuthorizationManager address
+  - [x] 3.6 Add setter for AuthorizationManager address
     - Write function to set AuthorizationManager after deployment
     - Add access control (only owner)
     - _Requirements: 6.1_
 
-- [ ] 4. Implement AuthorizationManager smart contract
-  - [ ] 4.1 Create AuthorizationManager contract with authorization tracking
+- [x] 4. Implement AuthorizationManager smart contract
+  - [x] 4.1 Create AuthorizationManager contract with authorization tracking
     - Create authorizations mapping (workId => user => bool)
     - Create userAuthorizations mapping (user => workIds array)
     - Store CreationManager and PaymentManager addresses
     - _Requirements: 5.3, 8.1_
   
-  - [ ] 4.2 Implement authorization request and payment
+  - [x] 4.2 Implement authorization request and payment
     - Write requestAuthorization payable function
     - Query license fee from CreationManager
     - Validate msg.value equals license fee
@@ -101,12 +101,12 @@
     - Emit AuthorizationGranted event
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
   
-  - [ ] 4.3 Implement authorization verification
+  - [x] 4.3 Implement authorization verification
     - Write hasAuthorization view function
     - Used by CreationManager during derivative registration
     - _Requirements: 6.1_
   
-  - [ ] 4.4 Add query function for user authorizations
+  - [x] 4.4 Add query function for user authorizations
     - Implement getUserAuthorizations function
     - Return array of work IDs user is authorized for
     - _Requirements: 8.1, 8.2_
