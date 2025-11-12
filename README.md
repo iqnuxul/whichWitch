@@ -44,7 +44,7 @@ whichWitch/
 - 链上验证授权状态
 - 防止重复授权
 
-### 3. 收益分配 (Revenue Distribution)
+### 3. 收益分配 (Revenue Distribution)⚠️ 细则待讨论 ⚠️
 - **打赏**: 100% 直接给创作者
 - **授权费**: 50% 给直接创作者，50% 在祖先链中平均分配
 - 拉取式支付模式，创作者可随时提现
@@ -158,21 +158,3 @@ npm run deploy:sepolia
 - [ ] 用户测试
 - [ ] 主网部署
 
-## 贡献 (Contributing)
-
-欢迎贡献！请随时提交 Pull Request。
-
-## 许可证 (License)
-
-ISC License
-
-## 联系方式 (Contact)
-
-- GitHub: [@iqnuxul](https://github.com/iqnuxul)
-- Project Link: [https://github.com/iqnuxul/whichWitch](https://github.com/iqnuxul/whichWitch)
-
----
-
-**注**: 本项目目前处于开发阶段，仅部署在 Sepolia 测试网。请勿在主网使用真实资金。
-
-**Note**: This project is currently in development and only deployed on Sepolia testnet. Do not use real funds on mainnet.
