@@ -12,6 +12,7 @@ contract AuthorizationManager {
     error AlreadyAuthorized(address user, uint256 workId);
     error InvalidLicenseFee(uint256 expected, uint256 provided);
     error ZeroAmount();
+    error DerivativesNotAllowed(uint256 workId);
 
     // State variables
     mapping(uint256 => mapping(address => bool)) public authorizations; // workId => user => authorized
@@ -57,8 +58,14 @@ contract AuthorizationManager {
 
         require(success, "Failed to get work");
 
-        // Decode the Work struct (id, creator, parentId, licenseFee, timestamp, exists)
-        (, address creator,, uint256 licenseFee,,) = abi.decode(data, (uint256, address, uint256, uint256, uint256, bool));
+        // Decode the Work struct (id, creator, parentId, licenseFee, timestamp, derivativeAllowed, exists)
+        (, address creator,, uint256 licenseFee,, bool derivativeAllowed,) =
+            abi.decode(data, (uint256, address, uint256, uint256, uint256, bool, bool));
+
+        // Check if derivatives are allowed for this work
+        if (!derivativeAllowed) {
+            revert DerivativesNotAllowed(workId);
+        }
 
         // Validate payment amount
         if (msg.value != licenseFee) {

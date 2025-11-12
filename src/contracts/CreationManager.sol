@@ -13,6 +13,7 @@ contract CreationManager {
     error NotAuthorized(address user, uint256 workId);
     error InvalidLicenseFee();
     error InvalidAuthorizationManager();
+    error DerivativesNotAllowed(uint256 workId);
 
     // Work structure
     struct Work {
@@ -21,6 +22,7 @@ contract CreationManager {
         uint256 parentId; // 0 for original works
         uint256 licenseFee; // in wei
         uint256 timestamp;
+        bool derivativeAllowed; // whether derivatives are allowed
         bool exists;
     }
 
@@ -38,6 +40,7 @@ contract CreationManager {
         uint256 indexed workId,
         address indexed creator,
         uint256 licenseFee,
+        bool derivativeAllowed,
         string metadataURI,
         uint256 timestamp
     );
@@ -47,6 +50,7 @@ contract CreationManager {
         uint256 indexed parentId,
         address indexed creator,
         uint256 licenseFee,
+        bool derivativeAllowed,
         string metadataURI,
         uint256 timestamp
     );
@@ -78,10 +82,11 @@ contract CreationManager {
     /**
      * @notice Registers a new original work
      * @param licenseFee Fee in wei that others must pay to create derivatives
+     * @param derivativeAllowed Whether derivative works are allowed
      * @param metadataURI URI pointing to off-chain metadata (IPFS/Supabase)
      * @return workId The ID of the newly registered work
      */
-    function registerOriginalWork(uint256 licenseFee, string calldata metadataURI)
+    function registerOriginalWork(uint256 licenseFee, bool derivativeAllowed, string calldata metadataURI)
         external
         returns (uint256 workId)
     {
@@ -93,27 +98,34 @@ contract CreationManager {
             parentId: 0, // 0 indicates original work
             licenseFee: licenseFee,
             timestamp: block.timestamp,
+            derivativeAllowed: derivativeAllowed,
             exists: true
         });
 
         creatorWorks[msg.sender].push(workId);
 
-        emit WorkRegistered(workId, msg.sender, licenseFee, metadataURI, block.timestamp);
+        emit WorkRegistered(workId, msg.sender, licenseFee, derivativeAllowed, metadataURI, block.timestamp);
     }
 
     /**
      * @notice Registers a new derivative work
      * @param parentId ID of the parent work
      * @param licenseFee Fee in wei for others to create derivatives of this work
+     * @param derivativeAllowed Whether derivative works are allowed for this work
      * @param metadataURI URI pointing to off-chain metadata
      * @return workId The ID of the newly registered derivative work
      */
-    function registerDerivativeWork(uint256 parentId, uint256 licenseFee, string calldata metadataURI)
-        external
-        returns (uint256 workId)
-    {
+    function registerDerivativeWork(
+        uint256 parentId,
+        uint256 licenseFee,
+        bool derivativeAllowed,
+        string calldata metadataURI
+    ) external returns (uint256 workId) {
         // Validate parent work exists
         if (!works[parentId].exists) revert InvalidParentWork(parentId);
+
+        // Check if parent allows derivatives
+        if (!works[parentId].derivativeAllowed) revert DerivativesNotAllowed(parentId);
 
         // Check authorization through AuthorizationManager
         (bool success, bytes memory data) =
@@ -131,13 +143,16 @@ contract CreationManager {
             parentId: parentId,
             licenseFee: licenseFee,
             timestamp: block.timestamp,
+            derivativeAllowed: derivativeAllowed,
             exists: true
         });
 
         creatorWorks[msg.sender].push(workId);
         derivatives[parentId].push(workId);
 
-        emit DerivativeWorkRegistered(workId, parentId, msg.sender, licenseFee, metadataURI, block.timestamp);
+        emit DerivativeWorkRegistered(
+            workId, parentId, msg.sender, licenseFee, derivativeAllowed, metadataURI, block.timestamp
+        );
     }
 
     /**
