@@ -28,6 +28,7 @@ contract CreationManager {
 
     // State variables
     mapping(uint256 => Work) public works;
+    mapping(uint256 => address[]) public workAncestors; // workId => array of ancestor creator addresses
     mapping(address => uint256[]) public creatorWorks;
     mapping(uint256 => uint256[]) public derivatives; // parentId => childIds
     uint256 public nextWorkId = 1;
@@ -102,6 +103,9 @@ contract CreationManager {
             exists: true
         });
 
+        // Original works have no ancestors - empty array
+        workAncestors[workId] = new address[](0);
+
         creatorWorks[msg.sender].push(workId);
 
         emit WorkRegistered(workId, msg.sender, licenseFee, derivativeAllowed, metadataURI, block.timestamp);
@@ -147,6 +151,21 @@ contract CreationManager {
             exists: true
         });
 
+        // Build ancestor array: parent's ancestors + parent creator
+        address[] memory parentAncestors = workAncestors[parentId];
+        address[] memory newAncestors = new address[](parentAncestors.length + 1);
+        
+        // Copy parent's ancestors
+        for (uint256 i = 0; i < parentAncestors.length; i++) {
+            newAncestors[i] = parentAncestors[i];
+        }
+        
+        // Add parent's creator as the last ancestor
+        newAncestors[parentAncestors.length] = works[parentId].creator;
+        
+        // Store ancestors for this work
+        workAncestors[workId] = newAncestors;
+
         creatorWorks[msg.sender].push(workId);
         derivatives[parentId].push(workId);
 
@@ -156,35 +175,18 @@ contract CreationManager {
     }
 
     /**
-     * @notice Gets the full ancestry chain for a work
-     * @param workId ID of the work to get chain for
-     * @return chain Array of work IDs from original work to specified work
-     * @dev Returns array where chain[0] is the original work and chain[length-1] is workId
+     * @notice Gets the ancestor creator addresses for a work (excluding the work's creator)
+     * @param workId ID of the work
+     * @return Array of ancestor creator addresses from original to parent
+     * @dev Used by PaymentManager for revenue distribution
      */
-    function getWorkChain(uint256 workId) external view returns (uint256[] memory chain) {
+    function getAncestors(uint256 workId) external view returns (address[] memory) {
         if (!works[workId].exists) revert WorkNotFound(workId);
-
-        // First, count the chain length
-        uint256 length = 0;
-        uint256 currentId = workId;
-        while (currentId != 0) {
-            length++;
-            currentId = works[currentId].parentId;
-        }
-
-        // Build the chain array
-        chain = new uint256[](length);
-        currentId = workId;
-        for (uint256 i = length; i > 0; i--) {
-            chain[i - 1] = currentId;
-            currentId = works[currentId].parentId;
-        }
-
-        return chain;
+        return workAncestors[workId];
     }
 
     /**
-     * @notice Gets the creators in the ancestry chain for a work
+     * @notice Gets the full creator chain for a work (ancestors + current creator)
      * @param workId ID of the work to get creator chain for
      * @return creators Array of creator addresses from original to specified work
      * @dev Used by PaymentManager for revenue distribution
@@ -192,22 +194,17 @@ contract CreationManager {
     function getCreatorChain(uint256 workId) external view returns (address[] memory creators) {
         if (!works[workId].exists) revert WorkNotFound(workId);
 
-        // First, count the chain length
-        uint256 length = 0;
-        uint256 currentId = workId;
-        while (currentId != 0) {
-            length++;
-            currentId = works[currentId].parentId;
+        address[] memory ancestors = workAncestors[workId];
+        creators = new address[](ancestors.length + 1);
+        
+        // Copy ancestor creators
+        for (uint256 i = 0; i < ancestors.length; i++) {
+            creators[i] = ancestors[i];
         }
-
-        // Build the creators array
-        creators = new address[](length);
-        currentId = workId;
-        for (uint256 i = length; i > 0; i--) {
-            creators[i - 1] = works[currentId].creator;
-            currentId = works[currentId].parentId;
-        }
-
+        
+        // Add current work's creator at the end
+        creators[ancestors.length] = works[workId].creator;
+        
         return creators;
     }
 

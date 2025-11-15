@@ -13,8 +13,13 @@ async function main() {
   console.log("=" .repeat(60));
   console.log("1. 部署 PaymentManager...");
   console.log("=".repeat(60));
+  
+  // Use deployer address as platform wallet (you can change this later)
+  const platformWallet = deployer.address;
+  console.log("Platform wallet:", platformWallet);
+  
   const PaymentManager = await hre.ethers.getContractFactory("PaymentManager");
-  const paymentManager = await PaymentManager.deploy();
+  const paymentManager = await PaymentManager.deploy(platformWallet);
   await paymentManager.waitForDeployment();
   const paymentManagerAddress = await paymentManager.getAddress();
   console.log("✅ PaymentManager 部署成功!");
@@ -99,11 +104,12 @@ async function main() {
     network: hre.network.name,
     chainId: (await hre.ethers.provider.getNetwork()).chainId.toString(),
     deployer: deployer.address,
+    platformWallet: platformWallet,
     timestamp: new Date().toISOString(),
     contracts: {
       PaymentManager: {
         address: paymentManagerAddress,
-        constructorArgs: [],
+        constructorArgs: [platformWallet],
       },
       CreationManager: {
         address: creationManagerAddress,
@@ -126,7 +132,7 @@ async function main() {
     console.log("=".repeat(60));
     console.log("合约验证命令:");
     console.log("=".repeat(60));
-    console.log(`npx hardhat verify --network ${hre.network.name} ${paymentManagerAddress}`);
+    console.log(`npx hardhat verify --network ${hre.network.name} ${paymentManagerAddress} "${platformWallet}"`);
     console.log(`npx hardhat verify --network ${hre.network.name} ${creationManagerAddress} "${paymentManagerAddress}"`);
     console.log(`npx hardhat verify --network ${hre.network.name} ${authorizationManagerAddress} "${creationManagerAddress}" "${paymentManagerAddress}"`);
     console.log("=".repeat(60));

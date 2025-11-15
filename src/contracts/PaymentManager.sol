@@ -19,11 +19,14 @@ contract PaymentManager is ReentrancyGuard {
     // State variables
     mapping(address => uint256) public balances;
     address public creationManager;
+    address public platformWallet; // Platform fee recipient
     
     // Revenue split configuration (in basis points, 10000 = 100%)
     uint256 public constant PERCENTAGE_BASE = 10000;
-    uint256 public constant DIRECT_CREATOR_SHARE = 5000;  // 50%
-    uint256 public constant ANCESTOR_POOL_SHARE = 5000;   // 50%
+    uint256 public constant DIRECT_CREATOR_SHARE = 4000;  // 40%
+    uint256 public constant ORIGINAL_CREATOR_SHARE = 4000; // 40%
+    uint256 public constant MIDDLE_ANCESTORS_POOL = 2000;  // 20%
+    uint256 public constant PLATFORM_FEE = 1000;           // 10% on withdrawal
 
     // Events
     event TipReceived(
@@ -48,6 +51,17 @@ contract PaymentManager is ReentrancyGuard {
     );
 
     event CreationManagerSet(address indexed creationManager);
+    event PlatformWalletSet(address indexed platformWallet);
+    event PlatformFeeCollected(address indexed user, uint256 feeAmount, uint256 timestamp);
+
+    /**
+     * @notice Constructor sets the platform wallet address
+     * @param _platformWallet Address where platform fees are sent
+     */
+    constructor(address _platformWallet) {
+        require(_platformWallet != address(0), "Invalid platform wallet");
+        platformWallet = _platformWallet;
+    }
 
     /**
      * @notice Sets the CreationManager contract address
@@ -59,6 +73,19 @@ contract PaymentManager is ReentrancyGuard {
         
         creationManager = _creationManager;
         emit CreationManagerSet(_creationManager);
+    }
+
+    /**
+     * @notice Updates the platform wallet address
+     * @param _platformWallet New platform wallet address
+     * @dev Can only be called once by the current platform wallet
+     */
+    function setPlatformWallet(address _platformWallet) external {
+        require(msg.sender == platformWallet, "Only platform wallet");
+        require(_platformWallet != address(0), "Invalid platform wallet");
+        
+        platformWallet = _platformWallet;
+        emit PlatformWalletSet(_platformWallet);
     }
 
     /**
@@ -86,9 +113,11 @@ contract PaymentManager is ReentrancyGuard {
     /**
      * @notice Distributes revenue from license fees across the creation chain
      * @dev Called by AuthorizationManager when a license fee is paid
+     * Distribution: 40% direct creator, 40% original creator, 20% middle ancestors
      * @param workId The work ID for which revenue is being distributed
-     * @param directCreator Address of the direct creator (receives 50%)
-     * @param ancestors Array of ancestor creator addresses (split remaining 50%)
+     * @param directCreator Address of the direct creator (receives 40%)
+     * @param ancestors Array of ancestor creator addresses [original, ...middle]
+     *                  First gets 40%, rest split 20%
      */
     function distributeRevenue(
         uint256 workId,
@@ -99,35 +128,44 @@ contract PaymentManager is ReentrancyGuard {
         if (msg.value == 0) revert ZeroAmount();
         
         uint256 totalAmount = msg.value;
-        uint256 directShare = (totalAmount * DIRECT_CREATOR_SHARE) / PERCENTAGE_BASE;
-        uint256 ancestorPool = totalAmount - directShare;
         
-        // Allocate direct creator share
+        // Direct creator gets 40%
+        uint256 directShare = (totalAmount * DIRECT_CREATOR_SHARE) / PERCENTAGE_BASE;
         balances[directCreator] += directShare;
         
         // Prepare arrays for event emission
-        uint256 recipientCount = ancestors.length + 1;
-        address[] memory recipients = new address[](recipientCount);
-        uint256[] memory amounts = new uint256[](recipientCount);
+        address[] memory recipients = new address[](ancestors.length + 1);
+        uint256[] memory amounts = new uint256[](ancestors.length + 1);
         
         recipients[0] = directCreator;
         amounts[0] = directShare;
         
-        // Distribute ancestor pool equally among ancestors
+        // Distribute to ancestors
         if (ancestors.length > 0) {
-            uint256 perAncestor = ancestorPool / ancestors.length;
-            uint256 remainder = ancestorPool % ancestors.length;
+            uint256 originalShare = (totalAmount * ORIGINAL_CREATOR_SHARE) / PERCENTAGE_BASE;
             
-            for (uint256 i = 0; i < ancestors.length; i++) {
-                uint256 ancestorShare = perAncestor;
-                // Give remainder to first ancestor to ensure all funds are distributed
-                if (i == 0) {
-                    ancestorShare += remainder;
-                }
+            if (ancestors.length == 1) {
+                // Only 2 people: original gets 40% + 20% = 60%
+                uint256 totalOriginalShare = originalShare + (totalAmount * MIDDLE_ANCESTORS_POOL) / PERCENTAGE_BASE;
+                balances[ancestors[0]] += totalOriginalShare;
+                recipients[1] = ancestors[0];
+                amounts[1] = totalOriginalShare;
+            } else {
+                // Multiple ancestors: original gets 40%, middle split 20%
+                balances[ancestors[0]] += originalShare;
+                recipients[1] = ancestors[0];
+                amounts[1] = originalShare;
                 
-                balances[ancestors[i]] += ancestorShare;
-                recipients[i + 1] = ancestors[i];
-                amounts[i + 1] = ancestorShare;
+                uint256 middlePool = (totalAmount * MIDDLE_ANCESTORS_POOL) / PERCENTAGE_BASE;
+                uint256 perMiddle = middlePool / (ancestors.length - 1);
+                uint256 remainder = middlePool % (ancestors.length - 1);
+                
+                for (uint256 i = 1; i < ancestors.length; i++) {
+                    uint256 share = perMiddle + (i == 1 ? remainder : 0);
+                    balances[ancestors[i]] += share;
+                    recipients[i + 1] = ancestors[i];
+                    amounts[i + 1] = share;
+                }
             }
         }
         
@@ -137,18 +175,45 @@ contract PaymentManager is ReentrancyGuard {
     /**
      * @notice Allows creators to withdraw their accumulated balance
      * @dev Uses checks-effects-interactions pattern and reentrancy guard
+     * Platform takes 10% fee on withdrawal
      */
     function withdraw() external nonReentrant {
         uint256 amount = balances[msg.sender];
         if (amount == 0) revert InsufficientBalance(msg.sender, 0);
         
-        // Effects: Update balance before transfer
-        balances[msg.sender] = 0;
+        // Calculate platform fee (10%)
+        uint256 platformFee = (amount * PLATFORM_FEE) / PERCENTAGE_BASE;
+        uint256 userAmount = amount - platformFee;
         
-        // Interactions: Transfer funds
-        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        // Effects: Update balances before transfer
+        balances[msg.sender] = 0;
+        balances[platformWallet] += platformFee;
+        
+        // Interactions: Transfer funds to user
+        (bool success, ) = payable(msg.sender).call{value: userAmount}("");
         if (!success) revert WithdrawalFailed(msg.sender);
         
-        emit Withdrawal(msg.sender, amount, block.timestamp);
+        emit PlatformFeeCollected(msg.sender, platformFee, block.timestamp);
+        emit Withdrawal(msg.sender, userAmount, block.timestamp);
+    }
+
+    /**
+     * @notice Allows platform to withdraw accumulated fees
+     * @dev Only platform wallet can call this
+     */
+    function withdrawPlatformFees() external nonReentrant {
+        require(msg.sender == platformWallet, "Only platform wallet");
+        
+        uint256 amount = balances[platformWallet];
+        if (amount == 0) revert InsufficientBalance(platformWallet, 0);
+        
+        // Effects: Update balance before transfer
+        balances[platformWallet] = 0;
+        
+        // Interactions: Transfer funds
+        (bool success, ) = payable(platformWallet).call{value: amount}("");
+        if (!success) revert WithdrawalFailed(platformWallet);
+        
+        emit Withdrawal(platformWallet, amount, block.timestamp);
     }
 }
