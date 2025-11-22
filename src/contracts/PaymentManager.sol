@@ -19,6 +19,7 @@ contract PaymentManager is ReentrancyGuard {
     // State variables
     mapping(address => uint256) public balances;
     address public creationManager;
+    address public authorizationManager; 
     address public platformWallet; // Platform fee recipient
     
     // Revenue split configuration (in basis points, 10000 = 100%)
@@ -63,6 +64,7 @@ contract PaymentManager is ReentrancyGuard {
         platformWallet = _platformWallet;
     }
 
+
     /**
      * @notice Sets the CreationManager contract address
      * @param _creationManager Address of the CreationManager contract
@@ -74,6 +76,13 @@ contract PaymentManager is ReentrancyGuard {
         creationManager = _creationManager;
         emit CreationManagerSet(_creationManager);
     }
+
+
+    function setAuthorizationManager(address _authorizationManager) external {
+        require(authorizationManager == address(0), "Already set");
+        authorizationManager = _authorizationManager;
+    }
+
 
     /**
      * @notice Updates the platform wallet address
@@ -124,7 +133,7 @@ contract PaymentManager is ReentrancyGuard {
         address directCreator,
         address[] calldata ancestors
     ) external payable {
-        if (msg.sender != creationManager) revert UnauthorizedCaller();
+        if (msg.sender != authorizationManager) revert UnauthorizedCaller();
         if (msg.value == 0) revert ZeroAmount();
         
         uint256 totalAmount = msg.value;
