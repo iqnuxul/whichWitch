@@ -232,7 +232,7 @@ LEFT JOIN work_stats ws ON w.work_id = ws.work_id;
 -- ============================================
 -- 取消注释以下代码来插入测试数据
 
-/*
+
 -- 测试用户
 INSERT INTO users (wallet_address, platform_id, name, bio, skills)
 VALUES 
@@ -244,7 +244,7 @@ INSERT INTO works (work_id, creator_address, title, description, image_url, meta
 VALUES 
   (1, '0x1234567890123456789012345678901234567890', 'Digital Vase', 'A beautiful digital vase', 'ipfs://QmTest1', 'ipfs://QmMeta1', ARRAY['Digital'], ARRAY['abstract', 'modern'], true, '0.01'),
   (2, '0x2345678901234567890123456789012345678901', 'Wooden Sculpture', 'Hand-carved wooden sculpture', 'ipfs://QmTest2', 'ipfs://QmMeta2', ARRAY['Wood'], ARRAY['traditional', 'organic'], true, '0.05');
-*/
+
 
 -- ============================================
 -- 完成！
