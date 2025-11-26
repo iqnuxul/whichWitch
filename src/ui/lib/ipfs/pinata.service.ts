@@ -13,6 +13,11 @@ const PINATA_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
  * 上传文件到 Pinata
  */
 export async function uploadFileToPinata(file: File): Promise<string> {
+  // 检查配置
+  if (!PINATA_JWT) {
+    throw new Error('Pinata JWT not configured. Please set PINATA_JWT environment variable.');
+  }
+
   try {
     const formData = new FormData();
     formData.append('file', file);
@@ -22,6 +27,7 @@ export async function uploadFileToPinata(file: File): Promise<string> {
     });
     formData.append('pinataMetadata', metadata);
 
+    console.log('Uploading to Pinata...');
     const response = await fetch(`${PINATA_API_URL}/pinning/pinFileToIPFS`, {
       method: 'POST',
       headers: {
@@ -31,10 +37,13 @@ export async function uploadFileToPinata(file: File): Promise<string> {
     });
 
     if (!response.ok) {
-      throw new Error(`Pinata upload failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Pinata error response:', errorText);
+      throw new Error(`Pinata upload failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Pinata upload successful:', data.IpfsHash);
     return data.IpfsHash;
   } catch (error) {
     console.error('Error uploading file to Pinata:', error);
@@ -46,7 +55,13 @@ export async function uploadFileToPinata(file: File): Promise<string> {
  * 上传 JSON 数据到 Pinata
  */
 export async function uploadJSONToPinata(jsonData: any, name?: string): Promise<string> {
+  // 检查配置
+  if (!PINATA_JWT) {
+    throw new Error('Pinata JWT not configured. Please set PINATA_JWT environment variable.');
+  }
+
   try {
+    console.log('Uploading JSON to Pinata...');
     const response = await fetch(`${PINATA_API_URL}/pinning/pinJSONToIPFS`, {
       method: 'POST',
       headers: {
@@ -62,7 +77,9 @@ export async function uploadJSONToPinata(jsonData: any, name?: string): Promise<
     });
 
     if (!response.ok) {
-      throw new Error(`Pinata JSON upload failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Pinata JSON error response:', errorText);
+      throw new Error(`Pinata JSON upload failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
