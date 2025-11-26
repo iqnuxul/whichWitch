@@ -15,19 +15,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// 管理员客户端（用于服务端操作，绕过 RLS）
-// 注意：只在服务端使用，不要在客户端代码中使用
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
-
 // 数据库类型定义
 export interface User {
   id: number;

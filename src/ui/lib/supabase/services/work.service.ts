@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from '../client';
+import { supabase } from '../client';
 import type { Work } from '../client';
 
 /**
@@ -83,7 +83,7 @@ export async function getDerivativeWorks(parentWorkId: number): Promise<Work[]> 
 
 /**
  * 创建新作品
- * 使用 supabaseAdmin 以绕过 RLS 限制
+ * 通过 API route 调用，使用服务端权限
  */
 export async function createWork(workData: {
   workId: number; // 从合约获取
@@ -101,27 +101,20 @@ export async function createWork(workData: {
   isRemix: boolean;
 }): Promise<Work> {
   try {
-    const { data, error } = await supabaseAdmin
-      .from('works')
-      .insert({
-        work_id: workData.workId,
-        creator_address: workData.creatorAddress.toLowerCase(),
-        title: workData.title,
-        description: workData.description || null,
-        story: workData.story || null,
-        image_url: workData.imageUrl,
-        metadata_uri: workData.metadataUri,
-        material: workData.material || null,
-        tags: workData.tags || null,
-        allow_remix: workData.allowRemix,
-        license_fee: workData.licenseFee || null,
-        parent_work_id: workData.parentWorkId || null,
-        is_remix: workData.isRemix,
-      })
-      .select()
-      .single();
+    const response = await fetch('/api/works/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(workData),
+    });
 
-    if (error) throw error;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create work');
+    }
+
+    const data = await response.json();
     return data;
   } catch (error) {
     console.error('Error creating work:', error);
