@@ -33,14 +33,20 @@ export async function registerOriginalWork(
     // 等待交易确认
     const receipt = await waitForTransactionReceipt(config, { hash });
     
-    // 从事件中提取 workId
-    const workRegisteredEvent = receipt.logs.find(
-      log => log.topics[0] === '0x...' // WorkRegistered 事件的签名
-    );
+    // 从事件日志中提取 workId
+    // WorkRegistered 事件的第一个参数是 workId (indexed)
+    let workId = 0n;
     
-    // 简化版：返回 hash，workId 需要从事件解析
-    // 实际应用中需要正确解析事件
-    return { hash, workId: 0n }; // TODO: 从事件解析 workId
+    if (receipt.logs && receipt.logs.length > 0) {
+      // workId 是第一个 indexed 参数，在 topics[1] 中
+      const log = receipt.logs[0];
+      if (log.topics && log.topics.length > 1) {
+        workId = BigInt(log.topics[1]);
+      }
+    }
+    
+    console.log('Work registered with ID:', workId.toString());
+    return { hash, workId };
   } catch (error) {
     console.error('Error registering original work:', error);
     throw error;
@@ -66,7 +72,19 @@ export async function registerDerivativeWork(
 
     const receipt = await waitForTransactionReceipt(config, { hash });
     
-    return { hash, workId: 0n }; // TODO: 从事件解析 workId
+    // 从事件日志中提取 workId
+    let workId = 0n;
+    
+    if (receipt.logs && receipt.logs.length > 0) {
+      // workId 是第一个 indexed 参数，在 topics[1] 中
+      const log = receipt.logs[0];
+      if (log.topics && log.topics.length > 1) {
+        workId = BigInt(log.topics[1]);
+      }
+    }
+    
+    console.log('Derivative work registered with ID:', workId.toString());
+    return { hash, workId };
   } catch (error) {
     console.error('Error registering derivative work:', error);
     throw error;
