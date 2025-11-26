@@ -3,27 +3,26 @@ import { CONTRACT_ADDRESSES } from '../contracts/addresses';
 import { CreationManagerABI } from '../contracts/abis';
 import { parseEther } from 'viem';
 
-// 创建作品
-export function useCreateWork() {
+// 创建原创作品
+export function useRegisterOriginalWork() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const createWork = async (
-    contentHash: string,
-    title: string,
-    description: string,
-    licenseFee: string // ETH 金额字符串，如 "0.01"
+  const registerWork = async (
+    licenseFee: string, // ETH 金额字符串，如 "0.01"
+    derivativeAllowed: boolean,
+    metadataURI: string // IPFS URI
   ) => {
     return writeContract({
       address: CONTRACT_ADDRESSES.creation,
       abi: CreationManagerABI,
-      functionName: 'createWork',
-      args: [contentHash, title, description, parseEther(licenseFee)],
+      functionName: 'registerOriginalWork',
+      args: [parseEther(licenseFee), derivativeAllowed, metadataURI],
     });
   };
 
   return {
-    createWork,
+    registerWork,
     isPending,
     isConfirming,
     isSuccess,
@@ -33,27 +32,26 @@ export function useCreateWork() {
 }
 
 // 创建衍生作品
-export function useCreateDerivative() {
+export function useRegisterDerivativeWork() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const createDerivative = async (
+  const registerDerivative = async (
     parentId: bigint,
-    contentHash: string,
-    title: string,
-    description: string,
-    licenseFee: string
+    licenseFee: string,
+    derivativeAllowed: boolean,
+    metadataURI: string
   ) => {
     return writeContract({
       address: CONTRACT_ADDRESSES.creation,
       abi: CreationManagerABI,
-      functionName: 'createDerivative',
-      args: [parentId, contentHash, title, description, parseEther(licenseFee)],
+      functionName: 'registerDerivativeWork',
+      args: [parentId, parseEther(licenseFee), derivativeAllowed, metadataURI],
     });
   };
 
   return {
-    createDerivative,
+    registerDerivative,
     isPending,
     isConfirming,
     isSuccess,

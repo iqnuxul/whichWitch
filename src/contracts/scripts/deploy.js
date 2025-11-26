@@ -14,7 +14,6 @@ async function main() {
   console.log("1. 部署 PaymentManager...");
   console.log("=".repeat(60));
   
-  // Use deployer address as platform wallet (you can change this later)
   const platformWallet = deployer.address;
   console.log("Platform wallet:", platformWallet);
   
@@ -69,25 +68,7 @@ async function main() {
   console.log("✅ 完成");
   console.log();
 
-  // 5. 验证配置
-  console.log("=".repeat(60));
-  console.log("5. 验证配置...");
-  console.log("=".repeat(60));
-  
-  const cmAuthManager = await creationManager.authorizationManager();
-  const pmCreationManager = await paymentManager.creationManager();
-  
-  console.log("CreationManager.authorizationManager:", cmAuthManager);
-  console.log("预期:", authorizationManagerAddress);
-  console.log("匹配:", cmAuthManager === authorizationManagerAddress ? "✅" : "❌");
-  console.log();
-  
-  console.log("PaymentManager.creationManager:", pmCreationManager);
-  console.log("预期:", creationManagerAddress);
-  console.log("匹配:", pmCreationManager === creationManagerAddress ? "✅" : "❌");
-  console.log();
-
-  // 6. 输出部署摘要
+  // 5. 输出部署摘要
   console.log("=".repeat(60));
   console.log("部署完成! 🎉");
   console.log("=".repeat(60));
@@ -97,46 +78,6 @@ async function main() {
   console.log("CreationManager:      ", creationManagerAddress);
   console.log("AuthorizationManager: ", authorizationManagerAddress);
   console.log("=".repeat(60));
-  console.log();
-
-  // 7. 保存部署信息
-  const deploymentInfo = {
-    network: hre.network.name,
-    chainId: (await hre.ethers.provider.getNetwork()).chainId.toString(),
-    deployer: deployer.address,
-    platformWallet: platformWallet,
-    timestamp: new Date().toISOString(),
-    contracts: {
-      PaymentManager: {
-        address: paymentManagerAddress,
-        constructorArgs: [platformWallet],
-      },
-      CreationManager: {
-        address: creationManagerAddress,
-        constructorArgs: [paymentManagerAddress],
-      },
-      AuthorizationManager: {
-        address: authorizationManagerAddress,
-        constructorArgs: [creationManagerAddress, paymentManagerAddress],
-      },
-    },
-  };
-
-  const filename = `deployment-${hre.network.name}-${Date.now()}.json`;
-  fs.writeFileSync(filename, JSON.stringify(deploymentInfo, null, 2));
-  console.log("📝 部署信息已保存到:", filename);
-  console.log();
-
-  // 8. 输出验证命令
-  if (hre.network.name !== "hardhat" && hre.network.name !== "localhost") {
-    console.log("=".repeat(60));
-    console.log("合约验证命令:");
-    console.log("=".repeat(60));
-    console.log(`npx hardhat verify --network ${hre.network.name} ${paymentManagerAddress} "${platformWallet}"`);
-    console.log(`npx hardhat verify --network ${hre.network.name} ${creationManagerAddress} "${paymentManagerAddress}"`);
-    console.log(`npx hardhat verify --network ${hre.network.name} ${authorizationManagerAddress} "${creationManagerAddress}" "${paymentManagerAddress}"`);
-    console.log("=".repeat(60));
-  }
 }
 
 main()

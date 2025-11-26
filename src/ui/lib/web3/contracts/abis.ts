@@ -4,20 +4,20 @@
 
 export const CreationManagerABI = [
   // 事件
-  "event WorkCreated(uint256 indexed workId, address indexed creator, string contentHash, uint256 timestamp)",
-  "event DerivativeCreated(uint256 indexed derivativeId, uint256 indexed parentId, address indexed creator, string contentHash)",
+  "event WorkRegistered(uint256 indexed workId, address indexed creator, uint256 licenseFee, bool derivativeAllowed, string metadataURI, uint256 timestamp)",
+  "event DerivativeWorkRegistered(uint256 indexed workId, uint256 indexed parentId, address indexed creator, uint256 licenseFee, bool derivativeAllowed, string metadataURI, uint256 timestamp)",
   
-  // 创建作品
-  "function createWork(string memory contentHash, string memory title, string memory description, uint256 licenseFee) external returns (uint256)",
+  // 创建原创作品
+  "function registerOriginalWork(uint256 licenseFee, bool derivativeAllowed, string calldata metadataURI) external returns (uint256 workId)",
   
   // 创建衍生作品
-  "function createDerivative(uint256 parentId, string memory contentHash, string memory title, string memory description, uint256 licenseFee) external returns (uint256)",
+  "function registerDerivativeWork(uint256 parentId, uint256 licenseFee, bool derivativeAllowed, string calldata metadataURI) external returns (uint256 workId)",
   
   // 查询函数
-  "function getWork(uint256 workId) external view returns (tuple(uint256 id, address creator, string contentHash, string title, string description, uint256 licenseFee, uint256 timestamp, bool exists))",
+  "function getWork(uint256 workId) external view returns (tuple(uint256 id, address creator, uint256 parentId, uint256 licenseFee, uint256 timestamp, bool derivativeAllowed, bool exists))",
   "function getWorksByCreator(address creator) external view returns (uint256[])",
   "function getDerivatives(uint256 parentId) external view returns (uint256[])",
-  "function getAncestorChain(uint256 workId) external view returns (uint256[])",
+  "function getAncestorChain(uint256 workId) external view returns (address[])",
 ] as const;
 
 export const PaymentManagerABI = [

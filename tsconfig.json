@@ -1,23 +1,36 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "lib": ["ES2020"],
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
+    "strict": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
     "moduleResolution": "bundler",
-    "outDir": "./dist",
-    "rootDir": "./",
-    "typeRoots": ["./node_modules/@types", "./typechain-types"]
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/ui/*"]
+    }
   },
   "include": [
-    "./contracts/**/*.ts",
-    "./test/**/*.ts",
-    "./scripts/**/*.ts",
-    "./hardhat.config.ts"
+    "next-env.d.ts",
+    "src/ui/**/*.ts",
+    "src/ui/**/*.tsx",
+    ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "src/contracts",
+    "src/backend"
+  ]
 }
