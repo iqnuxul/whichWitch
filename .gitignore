@@ -1,5 +1,6 @@
 node_modules
 .env
+.env.local
 coverage
 coverage.json
 typechain-types
@@ -7,6 +8,11 @@ typechain-types
 # Hardhat files
 cache
 artifacts
+
+# Next.js files
+.next/
+out/
+build/
 
 # Build files
 dist
@@ -22,3 +28,10 @@ dist
 # OS
 .DS_Store
 Thumbs.db
+
+# Vercel
+.vercel
+
+# Backup
+temp_backup/
+teammate-package.json

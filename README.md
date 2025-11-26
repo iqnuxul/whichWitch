@@ -1,160 +1,308 @@
-# whichWitch - Web3 Creation Platform
+# 🎨 WhichWitch - Web3 Creation Platform
 
-A blockchain-based platform for handmade art creators to register original works, authorize derivative creations (二创), and automatically distribute revenue across the creation tree.
+基于区块链的创作平台，支持原创作品和衍生作品的创建、授权和收益分配。
 
-## 项目简介 (Project Overview)
-
-whichWitch 是一个基于区块链的创作平台，让手工艺术创作者能够：
-- 在链上注册原创作品
-- 通过支付授权费用创建衍生作品
-- 自动在创作链中分配收益
-- 直接打赏创作者
-
-whichWitch is a blockchain-based creation platform that enables handmade art creators to:
-- Register original works on-chain
-- Create derivative works through paid authorization
-- Automatically distribute revenue across the creation chain
-- Tip creators directly
-
-## 项目结构 (Project Structure)
+## 📁 项目结构
 
 ```
 whichWitch/
-├── src/
-│   ├── contracts/          # 智能合约代码 (Smart contracts)
-│   │   ├── PaymentManager.sol
+├── app/                          # Next.js 15 App Router
+│   ├── layout.tsx               # 根布局（集成 Web3Provider）
+│   ├── page.tsx                 # 首页
+│   └── globals.css              # 全局样式
+├── components/                   # React 组件
+│   ├── providers/               # Context Providers
+│   │   └── web3-provider.tsx   # Web3 Provider（Wagmi + React Query）
+│   ├── whichwitch/              # 业务组件
+│   │   ├── app-container.tsx   # 主应用容器
+│   │   ├── auth-view.tsx       # 登录/钱包连接
+│   │   ├── collections-view.tsx # 作品集合展示
+│   │   ├── profile-view.tsx    # 用户资料
+│   │   ├── square-view.tsx     # 广场/发现页
+│   │   ├── upload-view.tsx     # 上传/创建作品
+│   │   └── work-card.tsx       # 作品卡片
+│   └── ui/                      # shadcn/ui 组件库
+├── lib/                          # 工具函数和配置
+│   ├── web3/                    # Web3 集成
+│   │   ├── config.ts           # Wagmi 配置
+│   │   ├── contracts/          # 合约相关
+│   │   │   ├── abis.ts        # 合约 ABI
+│   │   │   └── addresses.ts   # 合约地址
+│   │   └── hooks/              # Web3 Hooks
+│   │       ├── useCreationManager.ts
+│   │       └── useAuthorizationManager.ts
+│   ├── mock-data.ts            # Mock 数据（待替换）
+│   └── utils.ts                # 工具函数
+├── contracts/                    # Hardhat 智能合约项目
+│   ├── src/                     # Solidity 合约
 │   │   ├── CreationManager.sol
+│   │   ├── PaymentManager.sol
 │   │   └── AuthorizationManager.sol
-│   ├── backend/            # 后端代码 (Backend code)
-│   └── ui/                 # 前端代码 (Frontend code)
-├── docs/                   # 文档 (Documentation)
-├── test/                   # 测试文件 (Test files)
-├── scripts/                # 部署脚本 (Deployment scripts)
-└── README.md
+│   ├── scripts/                 # 部署脚本
+│   ├── test/                    # 合约测试
+│   └── hardhat.config.cjs      # Hardhat 配置
+├── public/                       # 静态资源
+├── .env.local                   # 环境变量（本地）
+├── .env.example                 # 环境变量示例
+├── package.json                 # 依赖配置
+├── next.config.mjs              # Next.js 配置
+├── tailwind.config.ts           # Tailwind CSS 配置
+└── tsconfig.json                # TypeScript 配置
 ```
 
-## 核心功能 (Core Features)
+## 🚀 快速开始
 
-### 1. 作品注册 (Work Registration)
-- **原创作品注册**: 创作者可以注册原创作品并设置授权费用
-- **衍生作品注册**: 获得授权后可以注册衍生作品
-
-### 2. 授权系统 (Authorization System)
-- 支付授权费用获得创作衍生作品的权限
-- 链上验证授权状态
-- 防止重复授权
-
-### 3. 收益分配 (Revenue Distribution)⚠️ 细则待讨论 ⚠️
-- **打赏**: 100% 直接给创作者
-- **授权费**: 50% 给直接创作者，50% 在祖先链中平均分配
-- 拉取式支付模式，创作者可随时提现
-
-### 4. 创作树可视化 (Creation Tree)
-- 追踪完整的创作链
-- 可视化作品之间的衍生关系
-
-## 智能合约架构 (Smart Contract Architecture)
-
-### PaymentManager
-管理所有财务交易，包括打赏、授权费和收益分配。
-
-**主要功能**:
-- `tipCreator()`: 打赏创作者
-- `distributeRevenue()`: 分配授权费收益
-- `withdraw()`: 提现累积余额
-
-### CreationManager
-管理作品注册和创作树结构。
-
-**主要功能**:
-- `registerOriginalWork()`: 注册原创作品
-- `registerDerivativeWork()`: 注册衍生作品
-- `getWorkChain()`: 获取完整创作链
-- `getCreatorChain()`: 获取创作者链
-
-### AuthorizationManager
-管理授权和许可。
-
-**主要功能**:
-- `requestAuthorization()`: 请求授权并支付费用
-- `hasAuthorization()`: 验证授权状态
-- `getUserAuthorizations()`: 查询用户的所有授权
-
-## 技术栈 (Tech Stack)
-
-- **区块链**: Ethereum (Sepolia Testnet)
-- **智能合约**: Solidity 0.8.20
-- **开发框架**: Hardhat
-- **安全库**: OpenZeppelin
-- **前端**: Next.js + React (计划中)
-- **Web3**: ethers.js + wagmi + RainbowKit (计划中)
-- **后端**: Supabase (计划中)
-
-## 快速开始 (Quick Start)
-
-### 前置要求 (Prerequisites)
-- Node.js >= 18
-- npm or yarn
-- MetaMask wallet
-
-### 安装 (Installation)
+### 1. 安装依赖
 
 ```bash
-# 克隆仓库
-git clone https://github.com/iqnuxul/whichWitch.git
-cd whichWitch
-
-# 安装依赖
 npm install
-
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 文件，填入你的私钥和 RPC URL
 ```
 
-### 编译合约 (Compile Contracts)
+### 2. 配置环境变量
+
+复制 `.env.example` 到 `.env.local` 并填写你的配置：
+
+```bash
+cp .env.example .env.local
+```
+
+编辑 `.env.local`：
+
+```env
+# 已部署的合约地址（Sepolia 测试网）
+NEXT_PUBLIC_CONTRACT_ADDRESS_CREATION=0xB9365df57B3250cC6e4B9b3efDeE9871020b68cF
+NEXT_PUBLIC_CONTRACT_ADDRESS_PAYMENT=0xE9e700df0e448F5DebE55A8B153aebf8988db0c8
+NEXT_PUBLIC_CONTRACT_ADDRESS_AUTHORIZATION=0x182AF7db7B2928455900595506D94b26E173aeA1
+
+# 网络配置
+NEXT_PUBLIC_CHAIN_ID=11155111
+NEXT_PUBLIC_NETWORK_NAME=sepolia
+NEXT_PUBLIC_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
+```
+
+### 3. 运行开发服务器
+
+```bash
+npm run dev
+```
+
+访问 [http://localhost:3000](http://localhost:3000)
+
+### 4. 编译智能合约（可选）
 
 ```bash
 npm run compile
 ```
 
-### 运行测试 (Run Tests)
-
-```bash
-npm test
-```
-
-### 部署到 Sepolia (Deploy to Sepolia)
+### 5. 部署合约到 Sepolia（可选）
 
 ```bash
 npm run deploy:sepolia
 ```
 
-## 收益分配示例 (Revenue Distribution Example)
+## 📦 技术栈
 
-假设创作链: A → B → C → D
+### 前端
+- **Next.js 15** - React 框架
+- **React 19** - UI 库
+- **TypeScript** - 类型安全
+- **Tailwind CSS** - 样式框架
+- **shadcn/ui** - UI 组件库
+- **Framer Motion** - 动画库
 
-当 D 收到 1 ETH 的授权费时:
-- D (直接创作者): 0.5 ETH (50%)
-- A, B, C (祖先): 各 0.167 ETH (50% 平均分配)
+### Web3
+- **Wagmi** - React Hooks for Ethereum
+- **Viem** - TypeScript Ethereum 库
+- **Ethers.js v6** - 以太坊交互
+- **@tanstack/react-query** - 数据获取和缓存
 
-当 D 收到 1 ETH 的打赏时:
-- D: 1 ETH (100%)
+### 智能合约
+- **Solidity** - 智能合约语言
+- **Hardhat** - 开发环境
+- **OpenZeppelin** - 合约库
+- **Ethers.js** - 合约交互
 
-## 安全特性 (Security Features)
+## 🔧 可用脚本
 
-- ✅ 重入攻击保护 (ReentrancyGuard)
-- ✅ 检查-效果-交互模式 (Checks-Effects-Interactions)
-- ✅ 自定义错误节省 gas (Custom errors)
-- ✅ 输入验证
-- ✅ 拉取式支付模式
+### 前端开发
+```bash
+npm run dev          # 启动开发服务器
+npm run build        # 构建生产版本
+npm run start        # 启动生产服务器
+npm run lint         # 代码检查
+```
 
-## 开发路线图 (Roadmap)
+### 智能合约
+```bash
+npm run compile      # 编译合约
+npm run test:contracts  # 运行合约测试
+npm run deploy       # 部署到本地网络
+npm run deploy:sepolia  # 部署到 Sepolia 测试网
+npm run node         # 启动本地 Hardhat 节点
+npm run clean        # 清理编译文件
+```
 
-- [x] 智能合约开发
-- [ ] 前端界面开发
-- [ ] 后端服务和事件索引
-- [ ] Sepolia 测试网部署
-- [ ] 用户测试
-- [ ] 主网部署
+## 🌐 部署到 Vercel
 
+### 1. 推送代码到 GitHub
+
+```bash
+git add .
+git commit -m "feat: integrate frontend with smart contracts"
+git push origin combine
+```
+
+### 2. 在 Vercel 中导入项目
+
+1. 访问 [vercel.com](https://vercel.com)
+2. 点击 "Add New Project"
+3. 导入你的 GitHub 仓库
+4. Vercel 会自动检测 Next.js 项目
+
+### 3. 配置环境变量
+
+在 Vercel 项目设置中添加以下环境变量：
+
+```
+NEXT_PUBLIC_CONTRACT_ADDRESS_CREATION=0xB9365df57B3250cC6e4B9b3efDeE9871020b68cF
+NEXT_PUBLIC_CONTRACT_ADDRESS_PAYMENT=0xE9e700df0e448F5DebE55A8B153aebf8988db0c8
+NEXT_PUBLIC_CONTRACT_ADDRESS_AUTHORIZATION=0x182AF7db7B2928455900595506D94b26E173aeA1
+NEXT_PUBLIC_CHAIN_ID=11155111
+NEXT_PUBLIC_NETWORK_NAME=sepolia
+NEXT_PUBLIC_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
+```
+
+### 4. 部署
+
+点击 "Deploy"，Vercel 会自动构建和部署你的应用。
+
+## 📝 智能合约
+
+### 已部署的合约（Sepolia 测试网）
+
+- **CreationManager**: `0xB9365df57B3250cC6e4B9b3efDeE9871020b68cF`
+  - 管理作品创建和衍生关系
+  
+- **PaymentManager**: `0xE9e700df0e448F5DebE55A8B153aebf8988db0c8`
+  - 处理支付和收益分配
+  
+- **AuthorizationManager**: `0x182AF7db7B2928455900595506D94b26E173aeA1`
+  - 管理创作授权
+
+### 合约功能
+
+#### CreationManager
+- `createWork()` - 创建原创作品
+- `createDerivative()` - 创建衍生作品
+- `getWork()` - 获取作品信息
+- `getWorksByCreator()` - 获取创作者的所有作品
+- `getDerivatives()` - 获取衍生作品列表
+- `getAncestorChain()` - 获取祖先链
+
+#### AuthorizationManager
+- `requestAuthorization()` - 请求授权（支付授权费）
+- `hasAuthorization()` - 检查是否有授权
+- `getAuthorizationTimestamp()` - 获取授权时间
+
+#### PaymentManager
+- `processPayment()` - 处理支付
+- `calculateDistribution()` - 计算收益分配
+- `getTotalRevenue()` - 获取总收益
+- `getCreatorRevenue()` - 获取创作者收益
+
+## 🔗 Web3 集成示例
+
+### 连接钱包
+
+```typescript
+import { useConnect, useAccount } from 'wagmi';
+
+function ConnectButton() {
+  const { connect, connectors } = useConnect();
+  const { address, isConnected } = useAccount();
+
+  if (isConnected) {
+    return <div>Connected: {address}</div>;
+  }
+
+  return (
+    <button onClick={() => connect({ connector: connectors[0] })}>
+      Connect Wallet
+    </button>
+  );
+}
+```
+
+### 创建作品
+
+```typescript
+import { useCreateWork } from '@/lib/web3/hooks/useCreationManager';
+
+function CreateWorkForm() {
+  const { createWork, isPending, isSuccess } = useCreateWork();
+
+  const handleSubmit = async () => {
+    await createWork(
+      'QmHash...', // IPFS hash
+      'My Artwork',
+      'Description',
+      '0.01' // 0.01 ETH
+    );
+  };
+
+  return (
+    <button onClick={handleSubmit} disabled={isPending}>
+      {isPending ? 'Creating...' : 'Create Work'}
+    </button>
+  );
+}
+```
+
+### 请求授权
+
+```typescript
+import { useRequestAuthorization } from '@/lib/web3/hooks/useAuthorizationManager';
+
+function AuthorizeButton({ workId, licenseFee }: { workId: bigint, licenseFee: string }) {
+  const { requestAuthorization, isPending, isSuccess } = useRequestAuthorization();
+
+  const handleAuthorize = async () => {
+    await requestAuthorization(workId, licenseFee);
+  };
+
+  return (
+    <button onClick={handleAuthorize} disabled={isPending}>
+      {isPending ? 'Processing...' : `Pay ${licenseFee} ETH`}
+    </button>
+  );
+}
+```
+
+## 📚 下一步
+
+### 待完成的任务
+
+- [ ] 更新 `upload-view.tsx` 连接 CreationManager
+- [ ] 更新 `collections-view.tsx` 读取链上数据
+- [ ] 更新 `work-card.tsx` 显示真实作品信息
+- [ ] 更新 `auth-view.tsx` 集成 MetaMask 登录
+- [ ] 替换 `mock-data.ts` 为真实数据
+- [ ] 添加 IPFS 集成用于存储作品内容
+- [ ] 添加错误处理和加载状态
+- [ ] 添加交易确认提示
+- [ ] 优化用户体验
+
+## 📖 文档
+
+- [架构文档](./docs/ARCHITECTURE.md)
+- [支付流程](./docs/PAYMENT_FLOW.md)
+- [部署指南](./docs/DEPLOYMENT.md)
+- [整合计划](./INTEGRATION_PLAN.md)
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 License
+
+ISC
