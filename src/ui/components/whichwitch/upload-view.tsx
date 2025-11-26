@@ -102,8 +102,10 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
       
       // 4. 保存到数据库
       console.log("Saving to database...")
+      // 使用时间戳作为临时 workId（实际应该从合约事件解析）
+      const tempWorkId = Date.now()
       const newWork = await createWork({
-        workId: Number(contractResult.workId), // TODO: 需要从合约事件正确解析
+        workId: tempWorkId,
         creatorAddress: address,
         title: formData.title,
         description: formData.story,
