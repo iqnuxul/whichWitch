@@ -67,7 +67,7 @@ export function ProfileView({ user }: { user: UserProfile }) {
                 <div className="flex items-center gap-2">
                   <h1 className="text-3xl font-bold tracking-tight">{user.name}</h1>
                   <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-mono border border-primary/20">
-                    {dbUser ? `Platform ID: ${dbUser.platformId}` : `DID: ${user.did.slice(0, 12)}...`}
+                    {dbUser ? `Platform ID: ${dbUser.platform_id}` : `DID: ${user.did.slice(0, 12)}...`}
                   </span>
                 </div>
 
