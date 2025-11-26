@@ -3,7 +3,6 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["hkg1", "sfo1"],
   "functions": {
     "src/ui/app/api/**/*.ts": {
       "maxDuration": 30
@@ -26,12 +25,6 @@
           "value": "strict-origin-when-cross-origin"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/src/ui/app/api/$1"
     }
   ]
 }
