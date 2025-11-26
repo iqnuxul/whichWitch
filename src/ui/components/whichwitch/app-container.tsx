@@ -118,7 +118,7 @@ export function WhichwitchApp() {
               className="h-full"
             >
               <TabsContent value="upload" className="mt-0 max-w-2xl mx-auto">
-                <UploadView user={user} works={works} onAddWork={handleAddWork} />
+                <UploadView user={user} onAddWork={handleAddWork} />
               </TabsContent>
               <TabsContent value="square" className="mt-0">
                 <SquareView
