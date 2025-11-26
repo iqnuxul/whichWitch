@@ -7,11 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "compile": "cd src/contracts && hardhat compile",
-    "test:contracts": "cd src/contracts && hardhat test",
-    "deploy": "cd src/contracts && hardhat run ../backend/scripts/deploy.js",
-    "deploy:sepolia": "cd src/contracts && hardhat run ../backend/scripts/deploy.js --network sepolia"
+    "lint": "next lint"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -74,23 +70,12 @@
     "pinata-web3": "^0.5.3"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
-    "@nomicfoundation/hardhat-ethers": "^3.1.2",
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.11",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@nomicfoundation/hardhat-verify": "^2.0.11",
-    "@openzeppelin/contracts": "^5.4.0",
-    "@typechain/ethers-v6": "^0.5.1",
-    "@typechain/hardhat": "^9.1.0",
     "@types/node": "^24.10.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "chai": "^4.3.10",
     "dotenv": "^17.2.3",
-    "hardhat": "^2.22.0",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
-    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "repository": {
