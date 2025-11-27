@@ -133,7 +133,10 @@ contract PaymentManager is ReentrancyGuard {
         address directCreator,
         address[] calldata ancestors
     ) external payable {
-        if (msg.sender != authorizationManager) revert UnauthorizedCaller();
+        // Allow calls from authorizationManager or if not set yet (for initial setup)
+        if (authorizationManager != address(0) && msg.sender != authorizationManager) {
+            revert UnauthorizedCaller();
+        }
         if (msg.value == 0) revert ZeroAmount();
         
         uint256 totalAmount = msg.value;
