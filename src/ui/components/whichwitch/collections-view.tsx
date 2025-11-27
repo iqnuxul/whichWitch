@@ -67,6 +67,7 @@ export function CollectionsView({
     allowRemix: c.works.allow_remix,
     isRemix: c.works.is_remix,
     story: c.works.story || c.works.description || '',
+    licenseFee: c.works.license_fee || '0.05',
     savedAt: new Date(c.saved_at).toLocaleString(),
     savedFolder: c.folders.name,
     collectionStatus: authStatuses[c.works.work_id] || 'none',
@@ -269,8 +270,13 @@ export function CollectionsView({
               <Label>License Fee</Label>
               <div className="flex items-center gap-2 p-3 border border-border rounded-lg bg-muted/20">
                 <Wallet className="w-4 h-4 text-primary" />
-                <span className="text-sm font-mono">0.05 ETH</span>
+                <span className="text-sm font-mono">
+                  {selectedWork?.licenseFee || '0.05'} ETH
+                </span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                This fee will be paid to the original creator
+              </p>
             </div>
           </div>
 
