@@ -28,10 +28,12 @@ export function CollectionsView({
   onUnsave,
   folders: propFolders,
   onCreateFolder: propOnCreateFolder,
+  onUploadRemix,
 }: {
   onUnsave: (id: number) => void
   folders: string[]
   onCreateFolder: (name: string) => void
+  onUploadRemix?: (workId: number) => void
 }) {
   const { user } = useUser()
   const { 
@@ -128,11 +130,14 @@ export function CollectionsView({
       
       // 解析错误信息
       let errorMessage = "Payment failed. Please try again.";
+      let shouldUpdateStatus = true;
+      
       if (error.message) {
         if (error.message.includes("insufficient funds")) {
           errorMessage = "Insufficient funds. Please add more ETH to your wallet.";
-        } else if (error.message.includes("user rejected")) {
+        } else if (error.message.includes("user rejected") || error.message.includes("User rejected")) {
           errorMessage = "Transaction rejected by user.";
+          shouldUpdateStatus = false; // 不更新状态，允许用户重试
         } else if (error.message.includes("Internal JSON-RPC error")) {
           errorMessage = "Contract error. Please check your wallet balance and try again.";
         } else {
@@ -140,17 +145,19 @@ export function CollectionsView({
         }
       }
       
-      // 更新状态为 failed
-      try {
-        await updateAuthorizationStatus(
-          address,
-          selectedWork.id,
-          'failed',
-          undefined,
-          errorMessage
-        )
-      } catch (updateError) {
-        console.error("Failed to update status:", updateError)
+      // 只在非用户拒绝的情况下更新状态为 failed
+      if (shouldUpdateStatus) {
+        try {
+          await updateAuthorizationStatus(
+            address,
+            selectedWork.id,
+            'failed',
+            undefined,
+            errorMessage
+          )
+        } catch (updateError) {
+          console.error("Failed to update status:", updateError)
+        }
       }
       
       setPaymentError(errorMessage)
@@ -164,8 +171,10 @@ export function CollectionsView({
       return // Button should be disabled, but just in case
     }
     if (work.collectionStatus === "approved") {
-      setSelectedWork(work)
-      setUploadModalOpen(true)
+      // 切换到 Create tab 并预选 parent work
+      if (onUploadRemix) {
+        onUploadRemix(work.id)
+      }
     } else {
       setSelectedWork(work)
       setRemixModalOpen(true)

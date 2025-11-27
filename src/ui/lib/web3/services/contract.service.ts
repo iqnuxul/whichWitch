@@ -356,14 +356,14 @@ export async function getTotalRevenue(workId: bigint): Promise<bigint> {
  */
 export async function getCreatorRevenue(creatorAddress: string): Promise<bigint> {
   try {
-    const revenue = await readContract(config, {
+    const balance = await readContract(config, {
       address: CONTRACT_ADDRESSES.payment,
       abi: PaymentManagerABI,
-      functionName: 'getCreatorRevenue',
+      functionName: 'balances',
       args: [creatorAddress as `0x${string}`],
     });
 
-    return revenue as bigint;
+    return balance as bigint;
   } catch (error) {
     console.error('Error getting creator revenue:', error);
     return 0n;

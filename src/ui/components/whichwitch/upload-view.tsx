@@ -18,17 +18,33 @@ import { createWork } from "@/lib/supabase/services"
 import { useCollections } from "@/lib/hooks/useCollections"
 import { useUser } from "@/lib/hooks/useUser"
 
-export function UploadView({ user, isRemix = false, onAddWork }: { 
+export function UploadView({ 
+  user, 
+  isRemix = false, 
+  onAddWork,
+  preselectedParentWorkId,
+  onClearPreselection,
+}: { 
   user: UserProfile; 
   isRemix?: boolean;
   onAddWork?: (work: any) => void;
+  preselectedParentWorkId?: number | null;
+  onClearPreselection?: () => void;
 }) {
   const { address } = useAccount()
   const { user: dbUser } = useUser()
   const { collections, authStatuses } = useCollections(dbUser?.id)
   
-  const [mode, setMode] = useState<"original" | "remix">("original")
-  const [selectedParentWork, setSelectedParentWork] = useState<number | null>(null)
+  const [mode, setMode] = useState<"original" | "remix">(preselectedParentWorkId ? "remix" : "original")
+  const [selectedParentWork, setSelectedParentWork] = useState<number | null>(preselectedParentWorkId || null)
+  
+  // 当预选的 parent work 改变时更新状态
+  useEffect(() => {
+    if (preselectedParentWorkId) {
+      setMode("remix")
+      setSelectedParentWork(preselectedParentWorkId)
+    }
+  }, [preselectedParentWorkId])
 
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
   const [files, setFiles] = useState<File[]>([])
@@ -171,6 +187,7 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
           setTags([])
           setMaterialTags([])
           setSelectedParentWork(null)
+          if (onClearPreselection) onClearPreselection()
         }} className="w-full max-w-xs">
           Upload Another
         </Button>

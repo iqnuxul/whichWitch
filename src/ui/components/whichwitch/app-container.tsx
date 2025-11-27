@@ -23,6 +23,7 @@ export function WhichwitchApp() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [activeTab, setActiveTab] = useState("square")
   const [folders, setFolders] = useState(["Inspiration", "To Remix", "Favorites", "Research"])
+  const [preselectedParentWork, setPreselectedParentWork] = useState<number | null>(null)
 
   // TODO: 这些函数需要连接到实际的服务
   const handleAddWork = (newWork: any) => {
@@ -118,7 +119,12 @@ export function WhichwitchApp() {
               className="h-full"
             >
               <TabsContent value="upload" className="mt-0 max-w-2xl mx-auto">
-                <UploadView user={user} onAddWork={handleAddWork} />
+                <UploadView 
+                  user={user} 
+                  onAddWork={handleAddWork}
+                  preselectedParentWorkId={preselectedParentWork}
+                  onClearPreselection={() => setPreselectedParentWork(null)}
+                />
               </TabsContent>
               <TabsContent value="square" className="mt-0">
                 <SquareView
@@ -132,6 +138,10 @@ export function WhichwitchApp() {
                   onUnsave={handleUnsave}
                   folders={folders}
                   onCreateFolder={handleCreateFolder}
+                  onUploadRemix={(workId) => {
+                    setPreselectedParentWork(workId)
+                    setActiveTab("upload")
+                  }}
                 />
               </TabsContent>
               <TabsContent value="profile" className="mt-0">
