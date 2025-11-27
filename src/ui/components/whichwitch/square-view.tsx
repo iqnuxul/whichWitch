@@ -7,11 +7,12 @@ import { Search, Filter, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useWorks } from "@/lib/hooks/useWorks"
 import { useUser } from "@/lib/hooks/useUser"
+import { useCollections } from "@/lib/hooks/useCollections"
 
 export function SquareView({
   onCollect,
-  folders,
-  onCreateFolder,
+  folders: propFolders,
+  onCreateFolder: propOnCreateFolder,
 }: {
   onCollect: (id: number, folder: string) => void
   folders: string[]
@@ -20,6 +21,42 @@ export function SquareView({
   const [search, setSearch] = useState("")
   const { works, loading, error } = useWorks()
   const { user } = useUser()
+  const { folders: dbFolders, addCollection, addFolder } = useCollections(user?.id)
+  
+  // 使用数据库的文件夹，如果没有则使用 props
+  const folders = dbFolders.length > 0 ? dbFolders : propFolders.map(name => ({ id: 0, name, user_id: 0, description: null, is_default: false, created_at: '', updated_at: '' }))
+  
+  const handleCollect = async (workId: number, folderName: string) => {
+    if (!user?.id) {
+      console.error('User not logged in')
+      return
+    }
+    
+    try {
+      // 找到文件夹 ID
+      const folder = folders.find(f => f.name === folderName)
+      if (!folder) {
+        console.error('Folder not found:', folderName)
+        return
+      }
+      
+      await addCollection(workId, folder.id)
+      onCollect(workId, folderName) // 通知父组件
+    } catch (error) {
+      console.error('Failed to collect work:', error)
+    }
+  }
+  
+  const handleCreateFolder = async (name: string) => {
+    if (!user?.id) return
+    
+    try {
+      await addFolder(name)
+      propOnCreateFolder(name) // 通知父组件
+    } catch (error) {
+      console.error('Failed to create folder:', error)
+    }
+  }
 
   const COMMON_FILTERS = ["Digital", "Wood", "Clay", "Glass", "Metal", "Cyberpunk", "Minimalist", "Nature", "Abstract"]
 
@@ -115,12 +152,12 @@ export function SquareView({
           {filteredWorks.map((work) => (
             <WorkCard
               key={work.id}
-            work={work}
-            allowTip={true}
-            onCollect={(folder) => onCollect(work.id, folder)}
-            folders={folders}
-            onCreateFolder={onCreateFolder}
-          />
+              work={work}
+              allowTip={true}
+              onCollect={(folder) => handleCollect(work.id, folder)}
+              folders={folders.map(f => f.name)}
+              onCreateFolder={handleCreateFolder}
+            />
           ))}
         </div>
       )}

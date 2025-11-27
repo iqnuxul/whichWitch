@@ -30,13 +30,13 @@ export function WhichwitchApp() {
     console.log('Add work:', newWork)
   }
 
-  const handleCollect = (workId: number, folderName: string) => {
-    // 将使用 collection.service 实现
+  const handleCollect = async (workId: number, folderName: string) => {
+    // 这个函数现在不需要了，因为 square-view 和 collections-view 都使用 useCollections hook
     console.log('Collect work:', workId, folderName)
   }
 
-  const handleUnsave = (workId: number) => {
-    // 将使用 collection.service 实现
+  const handleUnsave = async (workId: number) => {
+    // 这个函数现在不需要了，因为 collections-view 使用 useCollections hook
     console.log('Unsave work:', workId)
   }
 
