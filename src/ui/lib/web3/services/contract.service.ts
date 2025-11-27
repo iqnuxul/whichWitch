@@ -80,8 +80,27 @@ export async function registerOriginalWork(
     }
     
     if (workId === 0n) {
-      console.error('❌ WARNING: workId is 0! This will cause database issues.');
-      throw new Error('Failed to extract workId from transaction receipt');
+      console.warn('⚠️ Could not extract workId from logs, trying alternative method...');
+      
+      // 备用方案：读取 nextWorkId 并减 1
+      try {
+        const nextWorkId = await readContract(config, {
+          address: CONTRACT_ADDRESSES.creation,
+          abi: CreationManagerABI,
+          functionName: 'nextWorkId',
+        }) as bigint;
+        
+        workId = nextWorkId - 1n;
+        console.log('✅ Got workId from nextWorkId:', workId.toString());
+      } catch (e) {
+        console.error('❌ Failed to get nextWorkId:', e);
+        throw new Error('Failed to extract workId from transaction receipt');
+      }
+    }
+    
+    if (workId === 0n) {
+      console.error('❌ WARNING: workId is still 0! This will cause database issues.');
+      throw new Error('Failed to extract workId: workId is 0');
     }
     
     console.log('✅ Work registered with ID:', workId.toString());
@@ -160,8 +179,27 @@ export async function registerDerivativeWork(
     }
     
     if (workId === 0n) {
-      console.error('❌ WARNING: workId is 0! This will cause database issues.');
-      throw new Error('Failed to extract workId from transaction receipt');
+      console.warn('⚠️ Could not extract workId from logs, trying alternative method...');
+      
+      // 备用方案：读取 nextWorkId 并减 1
+      try {
+        const nextWorkId = await readContract(config, {
+          address: CONTRACT_ADDRESSES.creation,
+          abi: CreationManagerABI,
+          functionName: 'nextWorkId',
+        }) as bigint;
+        
+        workId = nextWorkId - 1n;
+        console.log('✅ Got workId from nextWorkId:', workId.toString());
+      } catch (e) {
+        console.error('❌ Failed to get nextWorkId:', e);
+        throw new Error('Failed to extract workId from transaction receipt');
+      }
+    }
+    
+    if (workId === 0n) {
+      console.error('❌ WARNING: workId is still 0! This will cause database issues.');
+      throw new Error('Failed to extract workId: workId is 0');
     }
     
     console.log('✅ Derivative work registered with ID:', workId.toString());

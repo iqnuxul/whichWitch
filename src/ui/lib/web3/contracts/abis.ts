@@ -79,6 +79,13 @@ export const CreationManagerABI = [
     outputs: [{ type: 'address[]' }]
   },
   {
+    type: 'function',
+    name: 'nextWorkId',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }]
+  },
+  {
     type: 'event',
     name: 'WorkRegistered',
     inputs: [
