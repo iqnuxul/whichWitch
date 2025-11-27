@@ -177,18 +177,36 @@ export async function requestAuthorization(
   licenseFee: string
 ): Promise<string> {
   try {
+    console.log('Requesting authorization with params:', {
+      contract: CONTRACT_ADDRESSES.authorization,
+      workId: workId.toString(),
+      licenseFee,
+      value: parseEther(licenseFee).toString()
+    });
+
     const hash = await writeContract(config, {
       address: CONTRACT_ADDRESSES.authorization,
       abi: AuthorizationManagerABI,
       functionName: 'requestAuthorization',
       args: [workId],
       value: parseEther(licenseFee),
+      gas: 500000n, // 设置足够的 gas limit
     });
 
+    console.log('Transaction hash:', hash);
+    console.log('Waiting for confirmation...');
+    
     await waitForTransactionReceipt(config, { hash });
+    console.log('Transaction confirmed!');
+    
     return hash;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error requesting authorization:', error);
+    console.error('Error details:', {
+      message: error.message,
+      cause: error.cause,
+      details: error.details
+    });
     throw error;
   }
 }
