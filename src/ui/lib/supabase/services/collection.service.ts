@@ -141,6 +141,8 @@ export async function uncollectWork(userId: number, workId: number): Promise<voi
  */
 export async function getUserCollections(userId: number) {
   try {
+    console.log('📚 Fetching collections for user:', userId)
+    
     const { data, error } = await supabase
       .from('collections')
       .select(`
@@ -151,10 +153,19 @@ export async function getUserCollections(userId: number) {
       .eq('user_id', userId)
       .order('saved_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Supabase error in getUserCollections:', error)
+      throw error;
+    }
+    
+    console.log('📋 Collections fetched:', data?.length || 0, 'items')
+    if (data && data.length > 0) {
+      console.log('📋 Sample collection:', data[0])
+    }
+    
     return data || [];
   } catch (error) {
-    console.error('Error fetching user collections:', error);
+    console.error('❌ Error fetching user collections:', error);
     return [];
   }
 }

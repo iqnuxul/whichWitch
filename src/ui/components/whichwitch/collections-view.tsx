@@ -62,6 +62,16 @@ export function CollectionsView({
     const work = c.work_details || c.works; // 兼容旧数据
     const status = authStatuses[work.work_id] || 'none';
     
+    console.log('🔍 Collection work data:', {
+      work_id: work.work_id,
+      title: work.title,
+      is_remix: work.is_remix,
+      parent_work_id: work.parent_work_id,
+      like_count: work.like_count,
+      remix_count: work.remix_count,
+      total_derivatives: work.total_derivatives,
+    })
+    
     return {
       id: work.work_id,
       title: work.title,
@@ -70,6 +80,7 @@ export function CollectionsView({
       tags: work.tags || [],
       material: work.material?.join(', ') || '',
       likes: work.like_count || 0,
+      remixCount: work.remix_count || work.total_derivatives || 0,
       allowRemix: work.allow_remix,
       isRemix: work.is_remix,
       story: work.story || work.description || '',
