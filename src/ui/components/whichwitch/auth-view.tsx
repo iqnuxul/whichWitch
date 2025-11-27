@@ -15,6 +15,7 @@ import { useUser } from "@/lib/hooks/useUser"
 
 export function AuthView({ onLogin }: { onLogin: (user: UserProfile) => void }) {
   const [step, setStep] = useState<"welcome" | "profile">("welcome")
+  const [isAutoLoggingIn, setIsAutoLoggingIn] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     bio: "",
@@ -36,7 +37,8 @@ export function AuthView({ onLogin }: { onLogin: (user: UserProfile) => void }) 
     if (isConnected && address && !userLoading) {
       // 只有在用户数据加载完成后才进行判断
       if (user) {
-        // 老用户，延迟 1.5 秒后自动登录，让用户看到登陆页
+        // 老用户，标记为自动登录中，延迟 1.5 秒后自动登录
+        setIsAutoLoggingIn(true)
         setTimeout(() => {
           onLogin({
             did: `did:whichwitch:${address}`,
@@ -45,12 +47,12 @@ export function AuthView({ onLogin }: { onLogin: (user: UserProfile) => void }) 
             skills: user.skills || [],
           })
         }, 1500)
-      } else if (isNewUser && step === "welcome") {
-        // 新用户，显示注册表单
+      } else if (isNewUser && step === "welcome" && !isAutoLoggingIn) {
+        // 新用户，且不是自动登录中，显示注册表单
         setStep("profile")
       }
     }
-  }, [isConnected, address, user, isNewUser, step, userLoading])
+  }, [isConnected, address, user, isNewUser, step, userLoading, isAutoLoggingIn])
 
   const handleConnect = () => {
     // 使用第一个可用的连接器（通常是 MetaMask）
@@ -120,7 +122,7 @@ export function AuthView({ onLogin }: { onLogin: (user: UserProfile) => void }) 
           </p>
         </div>
 
-        {step === "welcome" || userLoading ? (
+        {step === "welcome" || userLoading || isAutoLoggingIn ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="grid gap-4">
               <Button
