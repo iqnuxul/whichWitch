@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { getUserByWallet, createUser, type User } from '../supabase/services';
-import { initializeDefaultFolders } from '../supabase/services/collection.service';
+import { getUserByWallet, type User } from '../supabase/services';
 
 /**
  * 用户数据 Hook
@@ -51,18 +50,29 @@ export function useUser() {
     setError(null);
 
     try {
-      const newUser = await createUser({
-        walletAddress: address,
-        ...userData,
+      // 调用 API route 创建用户和默认文件夹
+      const response = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: address,
+          ...userData,
+        }),
       });
 
-      // 初始化默认文件夹
-      await initializeDefaultFolders(newUser.id);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to register user');
+      }
 
+      const newUser = await response.json();
       setUser(newUser);
       return newUser;
     } catch (err) {
       setError(err as Error);
+      console.error('Error registering user:', err);
       throw err;
     } finally {
       setLoading(false);
