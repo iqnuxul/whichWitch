@@ -106,8 +106,15 @@ export default function TestBalancePage() {
           <Button onClick={checkBalance} disabled={loading}>
             {loading ? 'Loading...' : 'Check Balance'}
           </Button>
-          <div className="text-2xl font-bold">
-            Balance: {balance} ETH
+          <div className="space-y-2">
+            <div className="text-2xl font-bold">
+              Balance: {balance} ETH
+            </div>
+            {balance !== '0' && parseFloat(balance) > 0 && (
+              <div className="text-sm text-muted-foreground font-mono">
+                ({(parseFloat(balance) * 1e18).toFixed(0)} wei)
+              </div>
+            )}
           </div>
         </div>
       </div>

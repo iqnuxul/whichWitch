@@ -142,7 +142,13 @@ export function ProfileView({ user }: { user: UserProfile }) {
                       </button>
                     </div>
                     <p className="text-xl font-mono font-bold">
-                      {loadingBalance ? "Loading..." : `${parseFloat(balance).toFixed(4)} ETH`}
+                      {loadingBalance ? "Loading..." : (() => {
+                        const bal = parseFloat(balance)
+                        if (bal === 0) return '0 ETH'
+                        if (bal < 0.0001) return `${bal.toExponential(4)} ETH`
+                        if (bal < 0.01) return `${bal.toFixed(6)} ETH`
+                        return `${bal.toFixed(4)} ETH`
+                      })()}
                     </p>
                   </div>
                 </div>
