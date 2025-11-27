@@ -227,36 +227,87 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
       </div>
 
       {mode === "remix" && (
-        <div className="space-y-3 p-4 border rounded-xl bg-muted/20">
-          <Label>Select Parent Work</Label>
-          <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
-            {approvedWorks.length > 0 ? (
-              approvedWorks.map((collection) => (
-                <div
-                  key={collection.work_id}
-                  onClick={() => setSelectedParentWork(collection.work_id)}
-                  className={`relative cursor-pointer group rounded-lg overflow-hidden border-2 transition-all ${selectedParentWork === collection.work_id ? "border-primary ring-2 ring-primary/20" : "border-transparent hover:border-primary/50"}`}
-                >
-                  <div className="aspect-square bg-muted">
-                    <img src={collection.work?.imageUrl || "/placeholder.svg"} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-2 bg-background/90 text-xs font-medium truncate">{collection.work?.title}</div>
-                  {selectedParentWork === collection.work_id && (
-                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="col-span-2 py-8 text-center text-muted-foreground text-sm">
-                No approved works found in your collection. <br />
-                Go to Saved tab to apply for remix rights.
-              </div>
-            )}
+        <div className="space-y-4 p-4 border rounded-xl bg-muted/20">
+          <div>
+            <Label className="text-base">Select Parent Work</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Choose the original work you want to create a derivative from
+            </p>
           </div>
+          
+          {/* Selected Parent Work Display */}
+          {selectedParentWork && approvedWorks.find(w => w.work_id === selectedParentWork) && (
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+              <p className="text-xs font-medium text-primary mb-2">Selected Parent Work:</p>
+              <div className="flex gap-3 items-center">
+                <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                  <img 
+                    src={approvedWorks.find(w => w.work_id === selectedParentWork)?.work?.imageUrl || "/placeholder.svg"} 
+                    className="w-full h-full object-cover" 
+                    alt="Parent work"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">
+                    {approvedWorks.find(w => w.work_id === selectedParentWork)?.work?.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    by {approvedWorks.find(w => w.work_id === selectedParentWork)?.work?.creator?.slice(0, 6)}...
+                    {approvedWorks.find(w => w.work_id === selectedParentWork)?.work?.creator?.slice(-4)}
+                  </p>
+                  <div className="flex gap-1 mt-1">
+                    {approvedWorks.find(w => w.work_id === selectedParentWork)?.work?.material?.slice(0, 2).map((mat: string) => (
+                      <span key={mat} className="text-[10px] px-1.5 py-0.5 bg-background rounded">
+                        {mat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedParentWork(null)}
+                  className="flex-shrink-0"
+                >
+                  Change
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          {/* Parent Work Grid */}
+          {!selectedParentWork && (
+            <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
+              {approvedWorks.length > 0 ? (
+                approvedWorks.map((collection) => (
+                  <div
+                    key={collection.work_id}
+                    onClick={() => setSelectedParentWork(collection.work_id)}
+                    className="relative cursor-pointer group rounded-lg overflow-hidden border-2 border-transparent hover:border-primary/50 transition-all"
+                  >
+                    <div className="aspect-square bg-muted">
+                      <img src={collection.work?.imageUrl || "/placeholder.svg"} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-2 bg-background/90">
+                      <p className="text-xs font-medium truncate">{collection.work?.title}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {collection.work?.creator?.slice(0, 6)}...{collection.work?.creator?.slice(-4)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-2 py-8 text-center text-muted-foreground text-sm">
+                  No approved works found in your collection. <br />
+                  Go to Saved tab to apply for remix rights.
+                </div>
+              )}
+            </div>
+          )}
+          
           {approvedWorks.length > 0 && !selectedParentWork && (
-            <p className="text-xs text-red-500">Please select a parent work to proceed.</p>
+            <p className="text-xs text-red-500">⚠️ Please select a parent work to proceed.</p>
           )}
         </div>
       )}
