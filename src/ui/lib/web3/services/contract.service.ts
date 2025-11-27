@@ -29,6 +29,20 @@ export async function registerOriginalWork(
       metadataURI
     });
     
+    // 先获取当前的 nextWorkId（注册前）
+    let expectedWorkId = 0n;
+    try {
+      const currentNextWorkId = await readContract(config, {
+        address: CONTRACT_ADDRESSES.creation,
+        abi: CreationManagerABI,
+        functionName: 'nextWorkId',
+      }) as bigint;
+      expectedWorkId = currentNextWorkId;
+      console.log('📊 Current nextWorkId before registration:', expectedWorkId.toString());
+    } catch (e) {
+      console.warn('⚠️ Could not read nextWorkId before registration:', e);
+    }
+    
     const hash = await writeContract(config, {
       address: CONTRACT_ADDRESSES.creation,
       abi: CreationManagerABI,
@@ -44,63 +58,57 @@ export async function registerOriginalWork(
       blockNumber: receipt.blockNumber
     });
     
-    // 从事件日志中提取 workId
+    // 方法1: 从事件日志中提取 workId
     let workId = 0n;
     
     if (receipt.logs && receipt.logs.length > 0) {
-      console.log('🔍 Parsing logs to find WorkRegistered event...');
+      console.log('🔍 Method 1: Parsing logs...');
       
-      // 查找来自 CreationManager 合约的日志
       const creationManagerLogs = receipt.logs.filter(
         log => log.address.toLowerCase() === CONTRACT_ADDRESSES.creation.toLowerCase()
       );
       
-      console.log(`Found ${creationManagerLogs.length} logs from CreationManager`);
-      
       if (creationManagerLogs.length > 0) {
         const log = creationManagerLogs[0];
-        console.log('📝 Log topics:', log.topics);
-        
-        // workId 是第一个 indexed 参数，在 topics[1] 中
         if (log.topics && log.topics.length > 1) {
           workId = BigInt(log.topics[1]);
-          console.log('✅ Extracted workId from topics[1]:', workId.toString());
-        } else {
-          console.error('❌ No topics found in log');
+          console.log('✅ Extracted workId from logs:', workId.toString());
         }
-      } else {
-        console.error('❌ No logs from CreationManager contract');
-        console.log('All logs:', receipt.logs.map(l => ({
-          address: l.address,
-          topics: l.topics
-        })));
       }
-    } else {
-      console.error('❌ No logs in receipt');
     }
     
+    // 方法2: 使用注册前获取的 expectedWorkId
+    if (workId === 0n && expectedWorkId > 0n) {
+      workId = expectedWorkId;
+      console.log('✅ Using expected workId:', workId.toString());
+    }
+    
+    // 方法3: 查询用户的最新作品
     if (workId === 0n) {
-      console.warn('⚠️ Could not extract workId from logs, trying alternative method...');
-      
-      // 备用方案：读取 nextWorkId 并减 1
+      console.warn('⚠️ Trying method 3: Query creator works...');
       try {
-        const nextWorkId = await readContract(config, {
-          address: CONTRACT_ADDRESSES.creation,
-          abi: CreationManagerABI,
-          functionName: 'nextWorkId',
-        }) as bigint;
-        
-        workId = nextWorkId - 1n;
-        console.log('✅ Got workId from nextWorkId:', workId.toString());
+        const account = await config.getClient().account;
+        if (account) {
+          const works = await readContract(config, {
+            address: CONTRACT_ADDRESSES.creation,
+            abi: CreationManagerABI,
+            functionName: 'getWorksByCreator',
+            args: [account.address],
+          }) as bigint[];
+          
+          if (works.length > 0) {
+            workId = works[works.length - 1]; // 最后一个是最新的
+            console.log('✅ Got workId from creator works:', workId.toString());
+          }
+        }
       } catch (e) {
-        console.error('❌ Failed to get nextWorkId:', e);
-        throw new Error('Failed to extract workId from transaction receipt');
+        console.error('❌ Failed to get creator works:', e);
       }
     }
     
     if (workId === 0n) {
-      console.error('❌ WARNING: workId is still 0! This will cause database issues.');
-      throw new Error('Failed to extract workId: workId is 0');
+      console.error('❌ All methods failed to extract workId');
+      throw new Error('Failed to extract workId from transaction');
     }
     
     console.log('✅ Work registered with ID:', workId.toString());
@@ -128,6 +136,20 @@ export async function registerDerivativeWork(
       metadataURI
     });
     
+    // 先获取当前的 nextWorkId（注册前）
+    let expectedWorkId = 0n;
+    try {
+      const currentNextWorkId = await readContract(config, {
+        address: CONTRACT_ADDRESSES.creation,
+        abi: CreationManagerABI,
+        functionName: 'nextWorkId',
+      }) as bigint;
+      expectedWorkId = currentNextWorkId;
+      console.log('📊 Current nextWorkId before registration:', expectedWorkId.toString());
+    } catch (e) {
+      console.warn('⚠️ Could not read nextWorkId before registration:', e);
+    }
+    
     const hash = await writeContract(config, {
       address: CONTRACT_ADDRESSES.creation,
       abi: CreationManagerABI,
@@ -143,63 +165,57 @@ export async function registerDerivativeWork(
       blockNumber: receipt.blockNumber
     });
     
-    // 从事件日志中提取 workId
+    // 方法1: 从事件日志中提取 workId
     let workId = 0n;
     
     if (receipt.logs && receipt.logs.length > 0) {
-      console.log('🔍 Parsing logs to find WorkRegistered event...');
+      console.log('🔍 Method 1: Parsing logs...');
       
-      // 查找来自 CreationManager 合约的日志
       const creationManagerLogs = receipt.logs.filter(
         log => log.address.toLowerCase() === CONTRACT_ADDRESSES.creation.toLowerCase()
       );
       
-      console.log(`Found ${creationManagerLogs.length} logs from CreationManager`);
-      
       if (creationManagerLogs.length > 0) {
         const log = creationManagerLogs[0];
-        console.log('📝 Log topics:', log.topics);
-        
-        // workId 是第一个 indexed 参数，在 topics[1] 中
         if (log.topics && log.topics.length > 1) {
           workId = BigInt(log.topics[1]);
-          console.log('✅ Extracted workId from topics[1]:', workId.toString());
-        } else {
-          console.error('❌ No topics found in log');
+          console.log('✅ Extracted workId from logs:', workId.toString());
         }
-      } else {
-        console.error('❌ No logs from CreationManager contract');
-        console.log('All logs:', receipt.logs.map(l => ({
-          address: l.address,
-          topics: l.topics
-        })));
       }
-    } else {
-      console.error('❌ No logs in receipt');
     }
     
+    // 方法2: 使用注册前获取的 expectedWorkId
+    if (workId === 0n && expectedWorkId > 0n) {
+      workId = expectedWorkId;
+      console.log('✅ Using expected workId:', workId.toString());
+    }
+    
+    // 方法3: 查询用户的最新作品
     if (workId === 0n) {
-      console.warn('⚠️ Could not extract workId from logs, trying alternative method...');
-      
-      // 备用方案：读取 nextWorkId 并减 1
+      console.warn('⚠️ Trying method 3: Query creator works...');
       try {
-        const nextWorkId = await readContract(config, {
-          address: CONTRACT_ADDRESSES.creation,
-          abi: CreationManagerABI,
-          functionName: 'nextWorkId',
-        }) as bigint;
-        
-        workId = nextWorkId - 1n;
-        console.log('✅ Got workId from nextWorkId:', workId.toString());
+        const account = await config.getClient().account;
+        if (account) {
+          const works = await readContract(config, {
+            address: CONTRACT_ADDRESSES.creation,
+            abi: CreationManagerABI,
+            functionName: 'getWorksByCreator',
+            args: [account.address],
+          }) as bigint[];
+          
+          if (works.length > 0) {
+            workId = works[works.length - 1]; // 最后一个是最新的
+            console.log('✅ Got workId from creator works:', workId.toString());
+          }
+        }
       } catch (e) {
-        console.error('❌ Failed to get nextWorkId:', e);
-        throw new Error('Failed to extract workId from transaction receipt');
+        console.error('❌ Failed to get creator works:', e);
       }
     }
     
     if (workId === 0n) {
-      console.error('❌ WARNING: workId is still 0! This will cause database issues.');
-      throw new Error('Failed to extract workId: workId is 0');
+      console.error('❌ All methods failed to extract workId');
+      throw new Error('Failed to extract workId from transaction');
     }
     
     console.log('✅ Derivative work registered with ID:', workId.toString());
