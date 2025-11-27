@@ -76,6 +76,38 @@ export async function updateAuthorizationStatus(
   errorMessage?: string
 ): Promise<AuthorizationRequest> {
   try {
+    // 先查询最新的授权请求
+    const { data: latestRequest, error: queryError } = await supabase
+      .from('authorization_requests')
+      .select('id')
+      .eq('user_address', userAddress.toLowerCase())
+      .eq('work_id', workId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (queryError) {
+      // 如果没有找到记录，创建一个新的
+      if (queryError.code === 'PGRST116') {
+        const { data: newData, error: insertError } = await supabase
+          .from('authorization_requests')
+          .insert({
+            user_address: userAddress.toLowerCase(),
+            work_id: workId,
+            status,
+            tx_hash: txHash || null,
+            error_message: errorMessage || null,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        return newData;
+      }
+      throw queryError;
+    }
+
+    // 更新找到的记录
     const { data, error } = await supabase
       .from('authorization_requests')
       .update({
@@ -84,10 +116,7 @@ export async function updateAuthorizationStatus(
         error_message: errorMessage || null,
         updated_at: new Date().toISOString(),
       })
-      .eq('user_address', userAddress.toLowerCase())
-      .eq('work_id', workId)
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .eq('id', latestRequest.id)
       .select()
       .single();
 
@@ -133,9 +162,10 @@ export async function getUserCollectionAuthStatuses(
   try {
     const { data, error } = await supabase
       .from('authorization_requests')
-      .select('work_id, status')
+      .select('work_id, status, created_at')
       .eq('user_address', userAddress.toLowerCase())
-      .in('work_id', workIds);
+      .in('work_id', workIds)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
@@ -147,10 +177,14 @@ export async function getUserCollectionAuthStatuses(
       statusMap[id] = 'none';
     });
 
-    // 更新有授权请求的作品状态
+    // 更新有授权请求的作品状态（只取每个作品的最新记录）
     if (data) {
+      const seenWorkIds = new Set<number>();
       data.forEach(req => {
-        statusMap[req.work_id] = req.status as AuthorizationStatus;
+        if (!seenWorkIds.has(req.work_id)) {
+          statusMap[req.work_id] = req.status as AuthorizationStatus;
+          seenWorkIds.add(req.work_id);
+        }
       });
     }
 
