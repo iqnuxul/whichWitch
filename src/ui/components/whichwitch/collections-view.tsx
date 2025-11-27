@@ -19,7 +19,7 @@ import { GitFork, Wallet, Folder, Upload } from "lucide-react"
 
 import { useUser } from "@/lib/hooks/useUser"
 import { useAccount } from "wagmi"
-import { createAuthorizationRequest, updateAuthorizationStatus } from "@/lib/supabase/services"
+import { createAuthorizationRequest, updateAuthorizationStatus, deleteAuthorizationRequest } from "@/lib/supabase/services"
 import { requestAuthorization } from "@/lib/web3/services/contract.service"
 import { useCollections } from "@/lib/hooks/useCollections"
 import { Loader2 } from "lucide-react"
@@ -96,19 +96,22 @@ export function CollectionsView({
 
     setPaymentLoading(true)
     setPaymentError("")
+    
+    let authRequestCreated = false
 
     try {
-      // 1. 创建授权请求（pending 状态）
-      console.log("Creating authorization request...")
-      await createAuthorizationRequest(address, selectedWork.id)
-      
-      // 2. 调用合约支付
+      // 1. 调用合约支付（先支付，成功后再创建记录）
       console.log("Processing payment with fee:", selectedWork.licenseFee)
       console.log("Work ID:", selectedWork.id)
       const txHash = await requestAuthorization(
         BigInt(selectedWork.id),
         selectedWork.licenseFee || "0.05"
       )
+      
+      // 2. 支付成功后创建授权请求记录
+      console.log("Creating authorization request...")
+      await createAuthorizationRequest(address, selectedWork.id)
+      authRequestCreated = true
       
       // 3. 更新状态为 approved
       console.log("Updating authorization status...")
@@ -130,14 +133,14 @@ export function CollectionsView({
       
       // 解析错误信息
       let errorMessage = "Payment failed. Please try again.";
-      let shouldUpdateStatus = true;
+      let isUserRejection = false;
       
       if (error.message) {
         if (error.message.includes("insufficient funds")) {
           errorMessage = "Insufficient funds. Please add more ETH to your wallet.";
         } else if (error.message.includes("user rejected") || error.message.includes("User rejected")) {
           errorMessage = "Transaction rejected by user.";
-          shouldUpdateStatus = false; // 不更新状态，允许用户重试
+          isUserRejection = true;
         } else if (error.message.includes("Internal JSON-RPC error")) {
           errorMessage = "Contract error. Please check your wallet balance and try again.";
         } else {
@@ -145,20 +148,31 @@ export function CollectionsView({
         }
       }
       
-      // 只在非用户拒绝的情况下更新状态为 failed
-      if (shouldUpdateStatus) {
-        try {
-          await updateAuthorizationStatus(
-            address,
-            selectedWork.id,
-            'failed',
-            undefined,
-            errorMessage
-          )
-        } catch (updateError) {
-          console.error("Failed to update status:", updateError)
+      // 如果已经创建了授权请求但失败了，需要处理
+      if (authRequestCreated) {
+        if (isUserRejection) {
+          // 用户拒绝：删除 pending 记录
+          try {
+            await deleteAuthorizationRequest(address, selectedWork.id)
+          } catch (deleteError) {
+            console.error("Failed to delete auth request:", deleteError)
+          }
+        } else {
+          // 其他错误：更新为 failed
+          try {
+            await updateAuthorizationStatus(
+              address,
+              selectedWork.id,
+              'failed',
+              undefined,
+              errorMessage
+            )
+          } catch (updateError) {
+            console.error("Failed to update status:", updateError)
+          }
         }
       }
+      // 如果还没创建授权请求就失败了（支付阶段失败），不需要做任何数据库操作
       
       setPaymentError(errorMessage)
     } finally {
