@@ -82,6 +82,7 @@ export async function initializeDefaultFolders(userId: number): Promise<Folder[]
 
 /**
  * 收藏作品到文件夹
+ * 通过 API route 调用，使用服务端权限
  */
 export async function collectWork(
   userId: number,
@@ -90,18 +91,20 @@ export async function collectWork(
   note?: string
 ): Promise<Collection> {
   try {
-    const { data, error } = await supabase
-      .from('collections')
-      .insert({
-        user_id: userId,
-        work_id: workId,
-        folder_id: folderId,
-        note: note || null,
-      })
-      .select()
-      .single();
+    const response = await fetch('/api/collections/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, workId, folderId, note }),
+    });
 
-    if (error) throw error;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to collect work');
+    }
+
+    const data = await response.json();
     return data;
   } catch (error) {
     console.error('Error collecting work:', error);
@@ -111,16 +114,22 @@ export async function collectWork(
 
 /**
  * 取消收藏
+ * 通过 API route 调用，使用服务端权限
  */
 export async function uncollectWork(userId: number, workId: number): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('collections')
-      .delete()
-      .eq('user_id', userId)
-      .eq('work_id', workId);
+    const response = await fetch('/api/collections/remove', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, workId }),
+    });
 
-    if (error) throw error;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to remove collection');
+    }
   } catch (error) {
     console.error('Error uncollecting work:', error);
     throw error;
