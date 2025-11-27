@@ -21,7 +21,6 @@ export async function GET() {
     };
 
     // 测试 1: 检查合约代码是否存在
-    console.log('Testing CreationManager...');
     const creationCode = await client.getBytecode({ 
       address: CONTRACT_ADDRESSES.creation 
     });
@@ -31,7 +30,6 @@ export async function GET() {
       codeLength: creationCode?.length || 0,
     };
 
-    console.log('Testing PaymentManager...');
     const paymentCode = await client.getBytecode({ 
       address: CONTRACT_ADDRESSES.payment 
     });
