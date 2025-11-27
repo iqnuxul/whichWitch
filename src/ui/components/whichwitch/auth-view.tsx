@@ -36,13 +36,15 @@ export function AuthView({ onLogin }: { onLogin: (user: UserProfile) => void }) 
     if (isConnected && address && !userLoading) {
       // 只有在用户数据加载完成后才进行判断
       if (user) {
-        // 老用户，直接登录
-        onLogin({
-          did: `did:whichwitch:${address}`,
-          name: user.name,
-          bio: user.bio || "",
-          skills: user.skills || [],
-        })
+        // 老用户，延迟 1.5 秒后自动登录，让用户看到登陆页
+        setTimeout(() => {
+          onLogin({
+            did: `did:whichwitch:${address}`,
+            name: user.name,
+            bio: user.bio || "",
+            skills: user.skills || [],
+          })
+        }, 1500)
       } else if (isNewUser && step === "welcome") {
         // 新用户，显示注册表单
         setStep("profile")
