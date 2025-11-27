@@ -274,12 +274,26 @@ export async function processPayment(
   amount: string
 ): Promise<string> {
   try {
-    console.log('Processing payment:', {
+    console.log('💸 Processing payment:', {
       contract: CONTRACT_ADDRESSES.payment,
       workId: workId.toString(),
-      amount,
-      value: parseEther(amount).toString()
+      amount: amount + ' ETH',
+      value: parseEther(amount).toString() + ' wei'
     });
+    
+    // 先获取作品信息，看看创作者是谁
+    try {
+      const work = await readContract(config, {
+        address: CONTRACT_ADDRESSES.creation,
+        abi: CreationManagerABI,
+        functionName: 'getWork',
+        args: [workId],
+      });
+      console.log('📝 Work info:', work);
+      console.log('👤 Creator will receive tip:', work.creator);
+    } catch (e) {
+      console.warn('⚠️ Could not fetch work info:', e);
+    }
 
     const hash = await writeContract(config, {
       address: CONTRACT_ADDRESSES.payment,
@@ -289,9 +303,16 @@ export async function processPayment(
       value: parseEther(amount),
     });
 
-    console.log('Transaction sent, waiting for confirmation...', hash);
+    console.log('📤 Transaction sent:', hash);
+    console.log('⏳ Waiting for confirmation...');
+    
     const receipt = await waitForTransactionReceipt(config, { hash });
-    console.log('Transaction receipt:', receipt);
+    console.log('📋 Transaction receipt:', {
+      status: receipt.status,
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed.toString(),
+      logs: receipt.logs.length + ' events'
+    });
     
     // 检查交易是否成功
     if (receipt.status === 'reverted') {
@@ -299,10 +320,23 @@ export async function processPayment(
       throw new Error('Transaction failed: The transaction was reverted. This might be because the PaymentManager contract\'s creationManager address is not set.');
     }
     
+    // 检查是否有 TipReceived 事件
+    const tipEvent = receipt.logs.find(log => 
+      log.address.toLowerCase() === CONTRACT_ADDRESSES.payment.toLowerCase()
+    );
+    
+    if (tipEvent) {
+      console.log('✅ TipReceived event found in logs');
+    } else {
+      console.warn('⚠️ No TipReceived event found - payment might not have been recorded');
+    }
+    
     console.log('✅ Transaction successful!');
+    console.log('🔗 View on explorer: https://sepolia.etherscan.io/tx/' + hash);
+    
     return hash;
   } catch (error) {
-    console.error('Error processing payment:', error);
+    console.error('❌ Error processing payment:', error);
     throw error;
   }
 }
@@ -380,19 +414,40 @@ export async function getTotalRevenue(workId: bigint): Promise<bigint> {
  */
 export async function getCreatorRevenue(creatorAddress: string): Promise<bigint> {
   try {
-    console.log('Reading balance for:', creatorAddress, 'from contract:', CONTRACT_ADDRESSES.payment);
+    console.log('💰 Reading balance for:', creatorAddress);
+    console.log('📍 Contract:', CONTRACT_ADDRESSES.payment);
     
-    const balance = await readContract(config, {
+    // 尝试三种不同的方法查询余额
+    console.log('🔍 Method 1: Using balances mapping...');
+    const balance1 = await readContract(config, {
       address: CONTRACT_ADDRESSES.payment,
       abi: PaymentManagerABI,
       functionName: 'balances',
       args: [creatorAddress as `0x${string}`],
     });
+    console.log('✅ balances() returned:', balance1.toString(), 'wei');
+    
+    try {
+      console.log('🔍 Method 2: Using getBalance function...');
+      const balance2 = await readContract(config, {
+        address: CONTRACT_ADDRESSES.payment,
+        abi: PaymentManagerABI,
+        functionName: 'getBalance',
+        args: [creatorAddress as `0x${string}`],
+      });
+      console.log('✅ getBalance() returned:', balance2.toString(), 'wei');
+      
+      if (balance1 !== balance2) {
+        console.warn('⚠️ WARNING: balances and getBalance returned different values!');
+      }
+    } catch (e) {
+      console.log('ℹ️ getBalance() not available or failed');
+    }
 
-    console.log('Balance read from contract:', balance.toString(), 'wei');
-    return balance as bigint;
+    console.log('💵 Final balance:', balance1.toString(), 'wei', `(${formatEther(balance1)} ETH)`);
+    return balance1 as bigint;
   } catch (error) {
-    console.error('Error getting creator revenue:', error);
+    console.error('❌ Error getting creator revenue:', error);
     return 0n;
   }
 }
