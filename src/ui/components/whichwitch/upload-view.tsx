@@ -31,7 +31,7 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
   const [selectedParentWork, setSelectedParentWork] = useState<number | null>(null)
 
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [allowRemix, setAllowRemix] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [currentTag, setCurrentTag] = useState("")
@@ -56,17 +56,18 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!file || !address) return
+    if (files.length === 0 || !address) return
     if (mode === "remix" && !selectedParentWork) return
 
     setStatus("uploading")
     setErrorMessage("")
 
     try {
-      // 1. 上传图片到 IPFS
-      console.log("Uploading image to IPFS...")
-      const imageHash = await uploadFileToPinata(file)
-      const imageUrl = `https://gateway.pinata.cloud/ipfs/${imageHash}`
+      // 1. 上传所有图片到 IPFS
+      console.log("Uploading images to IPFS...")
+      const imageHashes = await Promise.all(files.map(file => uploadFileToPinata(file)))
+      const imageUrls = imageHashes.map(hash => `https://gateway.pinata.cloud/ipfs/${hash}`)
+      const imageUrl = imageUrls[0] // 主图片
       
       // 2. 创建并上传 metadata
       console.log("Creating metadata...")
@@ -74,7 +75,8 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
         title: formData.title,
         description: formData.story,
         story: formData.story,
-        imageHash: imageHash,
+        imageHash: imageHashes[0],
+        images: imageUrls,
         material: materialTags,
         tags: tags,
         creator: address,
@@ -110,6 +112,7 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
         title: formData.title,
         description: formData.story,
         imageUrl: imageUrl,
+        images: imageUrls,
         metadataUri: metadataUri,
         material: materialTags,
         tags: tags,
@@ -163,7 +166,7 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
         </div>
         <Button onClick={() => {
           setStatus("idle")
-          setFile(null)
+          setFiles([])
           setFormData({ title: "", story: "", licenseFee: "0.05" })
           setTags([])
           setMaterialTags([])
@@ -316,32 +319,58 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
         {/* File Upload Area */}
         <div
           className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-            file ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+            files.length > 0 ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
           }`}
         >
           <input
             type="file"
             id="file-upload"
             className="hidden"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            onChange={(e) => {
+              const newFiles = Array.from(e.target.files || [])
+              setFiles(prev => [...prev, ...newFiles])
+            }}
             accept="image/*,video/*"
+            multiple
           />
           <label htmlFor="file-upload" className="cursor-pointer block">
-            {file ? (
-              <div className="space-y-2">
+            {files.length > 0 ? (
+              <div className="space-y-3">
                 <div className="w-12 h-12 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <p className="font-medium text-sm truncate">{file.name}</p>
-                <p className="text-xs text-muted-foreground">Click to change</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {files.map((file, idx) => (
+                    <div key={idx} className="relative group">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-primary/20">
+                        <img 
+                          src={URL.createObjectURL(file)} 
+                          alt={file.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setFiles(prev => prev.filter((_, i) => i !== idx))
+                        }}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">Click to add more images</p>
               </div>
             ) : (
               <div className="space-y-2">
                 <div className="w-12 h-12 bg-muted text-muted-foreground rounded-full flex items-center justify-center mx-auto">
                   <UploadCloud className="w-6 h-6" />
                 </div>
-                <p className="font-medium text-sm">Click to upload Image/Video</p>
-                <p className="text-xs text-muted-foreground">IPFS / Arweave storage</p>
+                <p className="font-medium text-sm">Click to upload Images/Videos</p>
+                <p className="text-xs text-muted-foreground">Multiple files supported • IPFS storage</p>
               </div>
             )}
           </label>
@@ -469,7 +498,7 @@ export function UploadView({ user, isRemix = false, onAddWork }: {
         <Button
           type="submit"
           className="w-full h-12 text-lg"
-          disabled={!file || !formData.title || status === "uploading" || (mode === "remix" && !selectedParentWork)}
+          disabled={files.length === 0 || !formData.title || status === "uploading" || (mode === "remix" && !selectedParentWork)}
         >
           {status === "uploading" ? "Minting..." : mode === "remix" ? "Mint Remix" : "Mint to Chain"}
         </Button>

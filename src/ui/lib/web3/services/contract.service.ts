@@ -341,3 +341,23 @@ export async function getCreatorRevenue(creatorAddress: string): Promise<bigint>
     return 0n;
   }
 }
+
+/**
+ * 提现创作者收益
+ */
+export async function withdrawRevenue(): Promise<string> {
+  try {
+    const hash = await writeContract(config, {
+      address: CONTRACT_ADDRESSES.payment,
+      abi: PaymentManagerABI,
+      functionName: 'withdrawRevenue',
+      args: [],
+    });
+
+    await waitForTransactionReceipt(config, { hash });
+    return hash;
+  } catch (error) {
+    console.error('Error withdrawing revenue:', error);
+    throw error;
+  }
+}

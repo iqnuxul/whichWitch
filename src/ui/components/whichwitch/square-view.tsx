@@ -73,6 +73,7 @@ export function SquareView({
     tags: work.tags || [],
     material: work.material?.join(', ') || '',
     likes: work.like_count || 0,
+    remixCount: work.remix_count || 0,
     allowRemix: work.allow_remix,
     isRemix: work.is_remix,
     story: work.story || work.description || '',

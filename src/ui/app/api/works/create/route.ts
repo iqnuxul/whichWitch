@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
         description: workData.description || null,
         story: workData.story || null,
         image_url: workData.imageUrl,
+        images: workData.images || [workData.imageUrl],
         metadata_uri: workData.metadataUri,
         material: workData.material || null,
         tags: workData.tags || null,

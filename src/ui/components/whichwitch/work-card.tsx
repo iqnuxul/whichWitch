@@ -128,10 +128,16 @@ export function WorkCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
 
           <img
-            src={work.image || "/placeholder.svg"}
+            src={work.images?.[0] || work.image || "/placeholder.svg"}
             alt={work.title}
             className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700"
           />
+          
+          {work.images && work.images.length > 1 && (
+            <div className="absolute bottom-2 right-2 z-20 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs font-medium">
+              +{work.images.length - 1}
+            </div>
+          )}
 
           {/* Overlay Actions */}
           <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-20 flex justify-between items-center">
@@ -236,6 +242,20 @@ export function WorkCard({
                 <Heart className={`w-4 h-4 mr-1.5 ${liked ? "fill-current" : ""}`} />
                 <span className="font-mono text-xs">{likeCount}</span>
               </Button>
+              {work.remixCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-primary px-2 h-8 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowDetailsModal(true)
+                  }}
+                >
+                  <GitFork className="w-4 h-4 mr-1.5" />
+                  <span className="font-mono text-xs">{work.remixCount}</span>
+                </Button>
+              )}
               {allowTip && (
                 <Button
                   variant="ghost"
@@ -571,7 +591,7 @@ function CollectModal({ open, onOpenChange, workTitle, folders = [], onCreateFol
                   </Button>
                 ))}
                 <Button
-                  variant="dashed"
+                  variant="outline"
                   className="justify-start text-xs h-9 bg-transparent border-dashed border-border/50 hover:border-primary/50"
                   onClick={() => setShowNewFolder(true)}
                 >
@@ -634,8 +654,21 @@ export function WorkDetailDialog({ work, open, onOpenChange, selectedRemixer, se
           {/* Left Column: Images */}
           <div className="space-y-4">
             <div className="aspect-square rounded-lg overflow-hidden border border-border/50 relative group">
-              <img src={work.image || "/placeholder.svg"} className="object-cover w-full h-full" alt={work.title} />
+              <img 
+                src={(work.images && work.images.length > 0 ? work.images[0] : work.image) || "/placeholder.svg"} 
+                className="object-cover w-full h-full" 
+                alt={work.title} 
+              />
             </div>
+            {work.images && work.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {work.images.slice(1, 5).map((img: string, idx: number) => (
+                  <div key={idx} className="aspect-square rounded-md overflow-hidden border border-border/30 cursor-pointer hover:border-primary/50 transition-colors">
+                    <img src={img} className="object-cover w-full h-full" alt={`${work.title} ${idx + 2}`} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right Column: Details */}

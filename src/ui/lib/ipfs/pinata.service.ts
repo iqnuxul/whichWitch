@@ -98,6 +98,7 @@ export async function createAndUploadMetadata(workData: {
   description?: string;
   story?: string;
   imageHash: string; // IPFS hash of the image
+  images?: string[]; // Array of IPFS URLs for multiple images
   material?: string[];
   tags?: string[];
   creator: string;
@@ -107,6 +108,7 @@ export async function createAndUploadMetadata(workData: {
     name: workData.title,
     description: workData.description || '',
     image: `ipfs://${workData.imageHash}`,
+    images: workData.images || [],
     attributes: [
       ...(workData.material?.map(m => ({ trait_type: 'Material', value: m })) || []),
       ...(workData.tags?.map(t => ({ trait_type: 'Tag', value: t })) || []),

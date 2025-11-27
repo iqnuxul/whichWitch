@@ -94,6 +94,7 @@ export async function createWork(workData: {
   description?: string;
   story?: string;
   imageUrl: string;
+  images?: string[]; // 多图片支持
   metadataUri: string;
   material?: string[];
   tags?: string[];

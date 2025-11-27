@@ -24,6 +24,7 @@ export function ProfileView({ user }: { user: UserProfile }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [balance, setBalance] = useState("0")
   const [loadingBalance, setLoadingBalance] = useState(true)
+  const [withdrawing, setWithdrawing] = useState(false)
 
   useEffect(() => {
     if (address) {
@@ -46,8 +47,45 @@ export function ProfileView({ user }: { user: UserProfile }) {
     }
   }
 
-  const myWorks = works.filter((w) => !w.isRemix).slice(0, 6)
-  const myRemixes = works.filter((w) => w.isRemix).slice(0, 4)
+  const handleWithdraw = async () => {
+    if (!address || parseFloat(balance) === 0) return
+    
+    setWithdrawing(true)
+    try {
+      const { withdrawRevenue } = await import("@/lib/web3/services/contract.service")
+      await withdrawRevenue()
+      
+      // 刷新余额
+      await loadBalance()
+      
+      alert("Withdrawal successful!")
+    } catch (error) {
+      console.error("Withdrawal failed:", error)
+      alert(`Withdrawal failed: ${error instanceof Error ? error.message : "Unknown error"}`)
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
+  // 转换数据库作品格式为组件需要的格式
+  const transformedWorks = works.map((work: any) => ({
+    id: work.work_id,
+    title: work.title,
+    author: work.creator_address?.slice(0, 6) + '...' + work.creator_address?.slice(-4),
+    image: work.image_url,
+    images: work.images,
+    tags: work.tags || [],
+    material: work.material?.join(', ') || '',
+    likes: work.like_count || 0,
+    remixCount: work.remix_count || 0,
+    allowRemix: work.allow_remix,
+    isRemix: work.is_remix,
+    story: work.story || work.description || '',
+    createdAt: work.created_at,
+  }))
+
+  const myWorks = transformedWorks.filter((w) => !w.isRemix)
+  const myRemixes = transformedWorks.filter((w) => w.isRemix)
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
@@ -99,7 +137,12 @@ export function ProfileView({ user }: { user: UserProfile }) {
                     </p>
                   </div>
                 </div>
-                <Button size="sm" className="gap-2 h-8 shrink-0">
+                <Button 
+                  size="sm" 
+                  className="gap-2 h-8 shrink-0"
+                  onClick={handleWithdraw}
+                  disabled={loadingBalance || parseFloat(balance) === 0}
+                >
                   <ArrowUpRight className="w-4 h-4" /> Withdraw
                 </Button>
               </div>
