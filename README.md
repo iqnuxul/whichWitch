@@ -96,17 +96,17 @@ User (Withdraw) → PaymentManager.withdraw()
 
 ## 🚀 Roadmap
 
-### V1.0 (December) - Foundation
+### V1.0 (✅) - Foundation
 **Goal**: Complete "Create → Authorize → Remix → Revenue Split → Withdraw" workflow
 
 **Features**:
 - Upload works and tip functionality
 - Authorization request with automatic approval and status display
 - Automatic revenue distribution across creation chain
+- Creation system with tags and searchable categories
 
 ### V2.0 (Ongoing) - Ecosystem Expansion
 **New Features**:
-- Creation system with tags and searchable categories
 - Enhanced security (anti-plagiarism, frontend security optimization)
 - NFT integration (mint, trade, secondary creation tracking)
 - Advanced product features and optimization
