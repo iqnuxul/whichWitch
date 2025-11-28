@@ -180,6 +180,7 @@ whichWitch/
 ## 📬 Contact
 
 For inquiries, please reach out through [GitHub Issues](https://github.com/iqnuxul/whichWitch/issues).
+Email: mluxunqi@gamil.com
 
 ---
 
