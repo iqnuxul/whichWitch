@@ -9,28 +9,15 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./src/ui/*"]
-    }
+    "outDir": "./dist",
+    "rootDir": "./",
+    "typeRoots": ["./node_modules/@types", "./typechain-types"]
   },
   "include": [
-    "next-env.d.ts",
-    "src/ui/**/*.ts",
-    "src/ui/**/*.tsx",
-    ".next/types/**/*.ts"
+    "./contracts/**/*.ts",
+    "./test/**/*.ts",
+    "./scripts/**/*.ts",
+    "./hardhat.config.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "src/contracts",
-    "src/backend"
-  ]
+  "exclude": ["node_modules"]
 }
