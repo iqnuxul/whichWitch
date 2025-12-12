@@ -1,29 +1,38 @@
 import type { Metadata } from 'next'
-import { Analytics } from '@vercel/analytics/next'
-import { Web3Provider } from '@/components/providers/web3-provider'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import { Providers } from './providers'
+import { Toaster } from 'react-hot-toast'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'WhichWitch - Web3 Creation Platform',
-  description: 'Create, share, and monetize your creative works on blockchain',
-  generator: 'v0.app',
-  icons: {
-    icon: '/icon.svg',
-  },
+  title: 'whichWitch - 去中心化创作平台',
+  description: '支持原创作品注册、衍生创作授权和智能收益分配的Web3创作平台',
+  keywords: ['Web3', 'NFT', '创作', '区块链', '版权', '收益分配'],
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className="font-sans antialiased">
-        <Web3Provider>
+    <html lang="zh-CN">
+      <body className={inter.className}>
+        <Providers>
           {children}
-        </Web3Provider>
-        <Analytics />
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+            }}
+          />
+        </Providers>
       </body>
     </html>
   )

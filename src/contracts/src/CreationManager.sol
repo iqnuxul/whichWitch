@@ -35,6 +35,7 @@ contract CreationManager {
 
     address public paymentManager;
     address public authorizationManager;
+    address public nftManager;
 
     // Events
     event WorkRegistered(
@@ -57,6 +58,7 @@ contract CreationManager {
     );
 
     event AuthorizationManagerSet(address indexed authorizationManager);
+    event NFTManagerSet(address indexed nftManager);
 
     /**
      * @notice Constructor sets the PaymentManager address
@@ -78,6 +80,19 @@ contract CreationManager {
 
         authorizationManager = _authorizationManager;
         emit AuthorizationManagerSet(_authorizationManager);
+    }
+
+    /**
+     * @notice Sets the NFTManager contract address
+     * @param _nftManager Address of the NFTManager contract
+     * @dev Can only be set once after deployment
+     */
+    function setNFTManager(address _nftManager) external {
+        require(_nftManager != address(0), "Invalid NFT manager");
+        require(nftManager == address(0), "NFT manager already set");
+
+        nftManager = _nftManager;
+        emit NFTManagerSet(_nftManager);
     }
 
     /**
@@ -107,6 +122,14 @@ contract CreationManager {
         workAncestors[workId] = new address[](0);
 
         creatorWorks[msg.sender].push(workId);
+
+        // Mint NFT if NFTManager is set
+        if (nftManager != address(0)) {
+            (bool success,) = nftManager.call(
+                abi.encodeWithSignature("mintWorkNFT(uint256,string)", workId, metadataURI)
+            );
+            require(success, "NFT minting failed");
+        }
 
         emit WorkRegistered(workId, msg.sender, licenseFee, derivativeAllowed, metadataURI, block.timestamp);
     }
@@ -168,6 +191,14 @@ contract CreationManager {
 
         creatorWorks[msg.sender].push(workId);
         derivatives[parentId].push(workId);
+
+        // Mint NFT if NFTManager is set
+        if (nftManager != address(0)) {
+            (bool success,) = nftManager.call(
+                abi.encodeWithSignature("mintWorkNFT(uint256,string)", workId, metadataURI)
+            );
+            require(success, "NFT minting failed");
+        }
 
         emit DerivativeWorkRegistered(
             workId, parentId, msg.sender, licenseFee, derivativeAllowed, metadataURI, block.timestamp
