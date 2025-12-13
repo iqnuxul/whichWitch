@@ -51,6 +51,7 @@ interface TrendingContent {
 export default function CyberGraphPage() {
   const { user } = useAuth()
   const router = useRouter()
+  const cyberEnabled = process.env.NEXT_PUBLIC_ENABLE_CYBERGRAPH === 'true'
   
   const [activeTab, setActiveTab] = useState<'sync' | 'profile' | 'social' | 'discover'>('sync')
   const [syncRecords, setSyncRecords] = useState<SyncRecord[]>([])
@@ -84,94 +85,121 @@ export default function CyberGraphPage() {
       return
     }
 
-    fetchSyncStatus()
-    fetchTrendingContent()
+    if (cyberEnabled) {
+      // fetchSyncStatus()
+      // fetchTrendingContent()
+    }
   }, [user, router])
 
   const fetchSyncStatus = async () => {
-    try {
-      const response = await cyberGraphAPI.getSyncStatus()
-      if (response.success) {
-        setSyncRecords(response.syncs)
-        setSyncStats(response.stats)
-      }
-    } catch (error) {
-      console.error('Fetch sync status error:', error)
+    if (!cyberEnabled) {
+      toast.error('CyberGraph 功能暂未部署，敬请期待！')
+      return
     }
+    
+    // try {
+    //   const response = await cyberGraphAPI.getSyncStatus()
+    //   if (response.data?.success) {
+    //     setSyncRecords(response.data.syncs || [])
+    //     setSyncStats(response.data.stats || { total: 0, synced: 0, pending: 0, failed: 0 })
+    //   }
+    // } catch (error) {
+    //   console.error('Fetch sync status error:', error)
+    // }
   }
 
   const fetchTrendingContent = async () => {
-    try {
-      const response = await cyberGraphAPI.getTrending()
-      if (response.success) {
-        setTrendingContent(response.trending)
-      }
-    } catch (error) {
-      console.error('Fetch trending content error:', error)
+    if (!cyberEnabled) {
+      toast.error('CyberGraph 功能暂未部署，敬请期待！')
+      return
     }
+    
+    // try {
+    //   const response = await cyberGraphAPI.getTrending()
+    //   if (response.data?.success) {
+    //     setTrendingContent(response.data.trending || [])
+    //   }
+    // } catch (error) {
+    //   console.error('Fetch trending content error:', error)
+    // }
   }
 
   const handleSyncWork = async (workId: number, contentType: string) => {
-    if (!user || user.loginType !== 'email') {
-      toast.error('CyberGraph同步功能仅支持邮箱登录用户')
+    if (!cyberEnabled) {
+      toast.error('CyberGraph 功能暂未部署，敬请期待！')
       return
     }
+    
+    // if (!user || user.loginType !== 'email') {
+    //   toast.error('CyberGraph同步功能仅支持邮箱登录用户')
+    //   return
+    // }
 
-    try {
-      setLoading(true)
+    // try {
+    //   setLoading(true)
       
-      const response = await cyberGraphAPI.syncWork({
-        workId,
-        contentType,
-        contentHash: `work-${workId}-${Date.now()}`, // 实际应该是IPFS hash
-        title: `作品 #${workId}`,
-        description: '来自whichWitch平台的创作作品',
-        tags: ['whichWitch', 'nft', 'art'],
-        category: 'art'
-      })
+    //   const response = await cyberGraphAPI.syncWork({
+    //     workId,
+    //     contentType,
+    //     contentHash: `work-${workId}-${Date.now()}`, // 实际应该是IPFS hash
+    //     title: `作品 #${workId}`,
+    //     description: '来自whichWitch平台的创作作品',
+    //     tags: ['whichWitch', 'nft', 'art'],
+    //     category: 'art'
+    //   })
 
-      if (response.success) {
-        toast.success('作品已开始同步到CyberGraph！')
-        fetchSyncStatus()
-      } else {
-        toast.error(response.error || '同步失败')
-      }
-    } catch (error: any) {
-      console.error('Sync work error:', error)
-      toast.error(error.message || '同步失败')
-    } finally {
-      setLoading(false)
-    }
+    //   if (response.data?.success) {
+    //     toast.success('作品已开始同步到CyberGraph！')
+    //     fetchSyncStatus()
+    //   } else {
+    //     toast.error(response.data?.error || '同步失败')
+    //   }
+    // } catch (error: any) {
+    //   console.error('Sync work error:', error)
+    //   toast.error(error.message || '同步失败')
+    // } finally {
+    //   setLoading(false)
+    // }
   }
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!profileForm.cyberGraphHandle) {
-      toast.error('请输入CyberGraph用户名')
+    if (!cyberEnabled) {
+      toast.error('CyberGraph 功能暂未部署，敬请期待！')
       return
     }
+    
+    // if (!profileForm.cyberGraphHandle) {
+    //   toast.error('请输入CyberGraph用户名')
+    //   return
+    // }
 
-    try {
-      setLoading(true)
+    // try {
+    //   setLoading(true)
       
-      const response = await cyberGraphAPI.updateProfile(profileForm)
+    //   const response = await cyberGraphAPI.updateProfile(profileForm)
       
-      if (response.success) {
-        toast.success('档案已更新到CyberGraph！')
-      } else {
-        toast.error(response.error || '更新失败')
-      }
-    } catch (error: any) {
-      console.error('Update profile error:', error)
-      toast.error(error.message || '更新失败')
-    } finally {
-      setLoading(false)
-    }
+    //   if (response.data?.success) {
+    //     toast.success('档案已更新到CyberGraph！')
+    //   } else {
+    //     toast.error(response.data?.error || '更新失败')
+    //   }
+    // } catch (error: any) {
+    //   console.error('Update profile error:', error)
+    //   toast.error(error.message || '更新失败')
+    // } finally {
+    //   setLoading(false)
+    // }
   }
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
+
+    if (!cyberEnabled) {
+      toast.error('CyberGraph 功能暂未部署，敬请期待！')
+      return
+    }
 
     try {
       setLoading(true)
@@ -181,10 +209,10 @@ export default function CyberGraphPage() {
         limit: 20
       })
       
-      if (response.success) {
-        setSearchResults(response.results)
+      if (response.data?.success) {
+        setSearchResults(response.data.results || [])
       } else {
-        toast.error(response.error || '搜索失败')
+        toast.error(response.data?.error || '搜索失败')
       }
     } catch (error: any) {
       console.error('Search error:', error)

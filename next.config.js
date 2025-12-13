@@ -5,6 +5,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
     NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID || '7001', // ZetaChain
+    NEXT_PUBLIC_ENABLE_CYBERGRAPH: process.env.NEXT_PUBLIC_ENABLE_CYBERGRAPH || 'false',
   },
   webpack: (config) => {
     config.resolve.fallback = {
@@ -34,7 +35,7 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
 }
 

@@ -70,8 +70,8 @@ export default function MarketplacePage() {
         status: 'active'
       })
       
-      if (response.success) {
-        setListings(response.listings)
+      if (response.data?.success) {
+        setListings(response.data.listings || [])
       }
     } catch (error) {
       console.error('Fetch marketplace data error:', error)
@@ -84,8 +84,8 @@ export default function MarketplacePage() {
   const fetchMarketplaceStats = async () => {
     try {
       const response = await marketplaceAPI.getStats()
-      if (response.success) {
-        setStats(response.stats)
+      if (response.data?.success) {
+        setStats(response.data.stats || { totalListings: 0, totalVolume: 0, totalSales: 0, averagePrice: 0 })
       }
     } catch (error) {
       console.error('Fetch stats error:', error)
@@ -106,11 +106,11 @@ export default function MarketplacePage() {
     try {
       const response = await marketplaceAPI.buyNFT({ listingId, price })
       
-      if (response.success) {
+      if (response.data?.success) {
         toast.success('购买成功！')
         fetchMarketplaceData() // 刷新数据
       } else {
-        toast.error(response.error || '购买失败')
+        toast.error(response.data?.error || '购买失败')
       }
     } catch (error: any) {
       console.error('Buy NFT error:', error)
@@ -137,10 +137,10 @@ export default function MarketplacePage() {
         sourceChain: 'native'
       })
       
-      if (response.success) {
+      if (response.data?.success) {
         toast.success('出价成功！')
       } else {
-        toast.error(response.error || '出价失败')
+        toast.error(response.data?.error || '出价失败')
       }
     } catch (error: any) {
       console.error('Make offer error:', error)

@@ -62,8 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token && savedLoginType) {
         try {
           const response = await authAPI.getMe(token)
-          if (response.success) {
-            setUser(response.user)
+          if (response.data?.success) {
+            setUser(response.data.user)
             setLoginType(savedLoginType)
           } else {
             // Token 无效，清除
@@ -105,17 +105,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         message
       })
 
-      if (response.success) {
-        setUser(response.user)
+      if (response.data?.success) {
+        setUser(response.data.user)
         setLoginType('wallet')
         
         // 保存认证信息
-        Cookies.set('auth_token', response.token, { expires: 7 })
+        Cookies.set('auth_token', response.data.token, { expires: 7 })
         Cookies.set('login_type', 'wallet', { expires: 7 })
         
         toast.success('钱包登录成功！')
       } else {
-        toast.error(response.error || '登录失败')
+        toast.error(response.data?.error || '登录失败')
       }
     } catch (error: any) {
       console.error('Wallet login error:', error)
@@ -132,11 +132,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const response = await authAPI.emailRegister({ email })
       
-      if (response.success) {
+      if (response.data?.success) {
         toast.success('注册成功！请检查您的邮箱进行验证。')
         
         // 如果有AI建议，显示给用户
-        if (response.aiAdvice) {
+        if (response.data.aiAdvice) {
           setTimeout(() => {
             toast.success('AI助手已为您生成个性化建议，请查看邮箱！', {
               duration: 6000
@@ -144,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 1000)
         }
       } else {
-        toast.error(response.error || '注册失败')
+        toast.error(response.data?.error || '注册失败')
       }
     } catch (error: any) {
       console.error('Email register error:', error)
@@ -161,11 +161,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const response = await authAPI.verifyEmail({ token })
       
-      if (response.success) {
+      if (response.data?.success) {
         toast.success('邮箱验证成功！欢迎加入 whichWitch！')
         
         // 如果有欢迎消息，显示给用户
-        if (response.welcomeMessage) {
+        if (response.data.welcomeMessage) {
           setTimeout(() => {
             toast.success('AI助手为您准备了专属建议！', {
               duration: 6000
@@ -173,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 1000)
         }
       } else {
-        toast.error(response.error || '验证失败')
+        toast.error(response.data?.error || '验证失败')
       }
     } catch (error: any) {
       console.error('Email verify error:', error)
@@ -190,10 +190,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const response = await authAPI.sendMagicLink({ email })
       
-      if (response.success) {
+      if (response.data?.success) {
         toast.success('登录链接已发送到您的邮箱！')
       } else {
-        toast.error(response.error || '发送失败')
+        toast.error(response.data?.error || '发送失败')
       }
     } catch (error: any) {
       console.error('Send magic link error:', error)
@@ -210,17 +210,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const response = await authAPI.magicLogin({ token })
       
-      if (response.success) {
-        setUser(response.user)
+      if (response.data?.success) {
+        setUser(response.data.user)
         setLoginType('email')
         
         // 保存认证信息
-        Cookies.set('auth_token', response.token, { expires: 7 })
+        Cookies.set('auth_token', response.data.token, { expires: 7 })
         Cookies.set('login_type', 'email', { expires: 7 })
         
         toast.success('登录成功！欢迎回来！')
       } else {
-        toast.error(response.error || '登录失败')
+        toast.error(response.data?.error || '登录失败')
       }
     } catch (error: any) {
       console.error('Magic link login error:', error)
@@ -246,8 +246,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await authAPI.getMe(token)
-      if (response.success) {
-        setUser(response.user)
+      if (response.data?.success) {
+        setUser(response.data.user)
       }
     } catch (error) {
       console.error('Refresh user error:', error)

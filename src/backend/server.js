@@ -36,7 +36,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
-app.use('/api/cybergraph', cybergraphRoutes);
+if (process.env.ENABLE_CYBERGRAPH === 'true') {
+  app.use('/api/cybergraph', cybergraphRoutes);
+} else {
+  console.warn('CyberGraph routes disabled: ENABLE_CYBERGRAPH is not true');
+}
 
 // 404处理
 app.use('*', (req, res) => {

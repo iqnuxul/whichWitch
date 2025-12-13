@@ -103,7 +103,7 @@ type WalletLoginResponse = {
 
 // 响应拦截器 - 处理错误
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       // Token过期或无效，清除本地认证信息
@@ -111,7 +111,7 @@ api.interceptors.response.use(
       Cookies.remove('login_type')
       window.location.href = '/login'
     }
-    return Promise.reject(error.response?.data || error)
+    return Promise.reject(error.response || error)
   }
 )
 
@@ -119,15 +119,15 @@ api.interceptors.response.use(
 export const authAPI = {
   // 钱包登录
   walletLogin: (data: WalletLoginRequest) =>
-    api.post<WalletLoginResponse>('/api/auth/wallet-login', data) as unknown as Promise<WalletLoginResponse>,
+    api.post<WalletLoginResponse>('/api/auth/wallet-login', data).then(r => r.data as WalletLoginResponse),
 
   // 邮箱注册
   emailRegister: (data: EmailRegisterRequest) =>
-    api.post<EmailRegisterResponse>('/api/auth/email-register', data) as unknown as Promise<EmailRegisterResponse>,
+    api.post<EmailRegisterResponse>('/api/auth/email-register', data).then(r => r.data as EmailRegisterResponse),
 
   // 邮箱登录
   emailLogin: (data: EmailLoginRequest) =>
-    api.post<EmailLoginResponse>('/api/auth/email-login', data) as unknown as Promise<EmailLoginResponse>,
+    api.post<EmailLoginResponse>('/api/auth/email-login', data).then(r => r.data as EmailLoginResponse),
 
   // 邮箱验证
   verifyEmail: (data: { token: string }) =>
@@ -144,7 +144,7 @@ export const authAPI = {
   // 获取用户信息
   getMe: (token?: string) => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    return api.get<EmailLoginResponse>('/api/auth/me', { headers }) as unknown as Promise<EmailLoginResponse>
+    return api.get<EmailLoginResponse>('/api/auth/me', { headers }).then(r => r.data as EmailLoginResponse)
   },
 
   // 登出
