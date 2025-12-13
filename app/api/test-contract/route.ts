@@ -3,8 +3,8 @@ import { createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
 
 const CONTRACT_ADDRESSES = {
-  creation: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_CREATION as `0x${string}`,
-  payment: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PAYMENT as `0x${string}`,
+  creation: process.env.NEXT_PUBLIC_CREATION_MANAGER_ADDRESS as `0x${string}`,
+  payment: process.env.NEXT_PUBLIC_PAYMENT_MANAGER_ADDRESS as `0x${string}`,
 };
 
 export async function GET() {

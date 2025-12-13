@@ -1,7 +1,7 @@
 'use client'
 
 import { WagmiProvider, createConfig, http } from 'wagmi'
-import { sepolia, hardhat } from 'wagmi/chains'
+import { sepolia } from 'wagmi/chains'
 import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '../contexts/AuthContext'
@@ -27,15 +27,14 @@ const zetaTestnet = {
   testnet: true,
 } as const
 
-// 创建 wagmi 配置
+// 创建简化的 wagmi 配置
 const wagmiConfig = getDefaultConfig({
   appName: 'whichWitch',
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'default-project-id',
-  chains: [zetaTestnet, sepolia, hardhat],
+  chains: [zetaTestnet, sepolia],
   transports: {
     [zetaTestnet.id]: http('https://zetachain-athens-evm.blockpi.network/v1/rpc/public'),
-    [sepolia.id]: http(`https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY || ''}`),
-    [hardhat.id]: http('http://127.0.0.1:8545'),
+    [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/demo'),
   },
 })
 
