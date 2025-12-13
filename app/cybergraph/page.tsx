@@ -8,7 +8,7 @@ import {
   Share2, 
   Users, 
   TrendingUp, 
-  Sync,
+  RefreshCw,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -271,7 +271,7 @@ export default function CyberGraphPage() {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Sync className="w-4 h-4 inline mr-2" />
+              <RefreshCw className="w-4 h-4 inline mr-2" />
               内容同步
             </button>
             <button
@@ -332,7 +332,7 @@ export default function CyberGraphPage() {
                 {loading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 ) : (
-                  <Sync className="w-4 h-4 mr-2" />
+                  <RefreshCw className="w-4 h-4 mr-2" />
                 )}
                 同步最新作品
               </button>

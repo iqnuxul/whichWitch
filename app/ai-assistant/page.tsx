@@ -8,7 +8,18 @@ export default function AIAssistantPage() {
   const { account, isConnected } = useWeb3Context();
   const [activeTab, setActiveTab] = useState('creation');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState({});
+  const [results, setResults] = useState<{
+    description?: string;
+    ideas?: string[];
+    suggestions?: string[];
+    analysis?: any;
+    brainstorm?: any;
+    marketAnalysis?: any;
+    tradingAdvice?: any;
+    web3Education?: any;
+    walletManagement?: any;
+    walletData?: any;
+  }>({});
 
   // 创作助手状态
   const [workTitle, setWorkTitle] = useState('');
@@ -17,7 +28,11 @@ export default function AIAssistantPage() {
   const [creativeGoals, setCreativeGoals] = useState('');
 
   // 交易助手状态
-  const [marketData, setMarketData] = useState(null);
+  const [marketData, setMarketData] = useState<{
+    totalListings?: number;
+    priceRanges?: any;
+    marketTrend?: string;
+  } | null>(null);
   const [userPreferences, setUserPreferences] = useState({
     riskLevel: 'medium',
     investmentGoal: 'long-term',
@@ -35,7 +50,12 @@ export default function AIAssistantPage() {
 
   // 通用聊天状态
   const [chatQuery, setChatQuery] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);
+  const [chatHistory, setChatHistory] = useState<Array<{
+    id: number;
+    question: string;
+    answer: any;
+    timestamp: Date;
+  }>>([]);
 
   // 获取市场数据
   useEffect(() => {
