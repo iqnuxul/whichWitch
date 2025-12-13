@@ -29,13 +29,77 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// 定义 API 响应类型
-interface ApiResponse<T = any> {
+type EmailRegisterRequest = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
+type EmailRegisterResponse = {
   success: boolean;
-  data?: T;
+  message: string;
+  user: {
+    id: number;
+    email: string | null;
+    walletAddress: string;
+    loginType: string;
+    createdAt: string;
+  };
+  wallet: {
+    address: string;
+    mnemonic: string;
+    createdAt: string;
+  };
+  securityAdvice: {
+    securityTips: string[];
+  };
+  usageGuide: unknown;
+  token: string;
   error?: string;
-  message?: string;
-}
+};
+
+type EmailLoginRequest = {
+  email: string;
+  password: string;
+};
+
+type EmailLoginResponse = {
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    email: string | null;
+    walletAddress: string;
+    loginType: string;
+    balance?: string;
+    createdAt: string;
+    lastLoginAt?: string;
+  };
+  token: string;
+  error?: string;
+};
+
+type WalletLoginRequest = {
+  address: string;
+  signature: string;
+  message: string;
+};
+
+type WalletLoginResponse = {
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    email: string | null;
+    walletAddress: string;
+    loginType: string;
+    balance?: string;
+    createdAt: string;
+    lastLoginAt?: string;
+  };
+  token: string;
+  error?: string;
+};
 
 // 响应拦截器 - 处理错误
 api.interceptors.response.use(
@@ -54,12 +118,16 @@ api.interceptors.response.use(
 // 认证API
 export const authAPI = {
   // 钱包登录
-  walletLogin: (data: { walletAddress: string; signature: string; message: string }) =>
-    api.post('/api/auth/wallet-login', data),
+  walletLogin: (data: WalletLoginRequest) =>
+    api.post<WalletLoginResponse>('/api/auth/wallet-login', data) as unknown as Promise<WalletLoginResponse>,
 
   // 邮箱注册
-  emailRegister: (data: { email: string }) =>
-    api.post('/api/auth/email-register', data),
+  emailRegister: (data: EmailRegisterRequest) =>
+    api.post<EmailRegisterResponse>('/api/auth/email-register', data) as unknown as Promise<EmailRegisterResponse>,
+
+  // 邮箱登录
+  emailLogin: (data: EmailLoginRequest) =>
+    api.post<EmailLoginResponse>('/api/auth/email-login', data) as unknown as Promise<EmailLoginResponse>,
 
   // 邮箱验证
   verifyEmail: (data: { token: string }) =>
@@ -76,7 +144,7 @@ export const authAPI = {
   // 获取用户信息
   getMe: (token?: string) => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    return api.get('/api/auth/me', { headers })
+    return api.get<EmailLoginResponse>('/api/auth/me', { headers }) as unknown as Promise<EmailLoginResponse>
   },
 
   // 登出
