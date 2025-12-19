@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWeb3Context } from '../../contexts/Web3Context';
 import { aiAPI } from '../../lib/api';
+import toast from 'react-hot-toast';
 
 export default function AIAssistantPage() {
   const { account, isConnected } = useWeb3Context();
@@ -76,30 +77,33 @@ export default function AIAssistantPage() {
   // 创作助手 - 生成作品简介
   const handleGenerateDescription = async () => {
     if (!workTitle.trim()) {
-      alert('请输入作品标题');
+      toast.error('请输入作品标题');
       return;
     }
 
     setLoading(true);
     try {
+      console.log('开始生成作品简介...');
       const response = await aiAPI.generateWorkDescription({
         workTitle,
         workType,
         userInput,
-        // userProfile: { account, isConnected }
       });
 
-      if (response.success) {
+      console.log('生成简介响应:', response);
+      
+      if (response.data?.success) {
         setResults(prev => ({
           ...prev,
-          description: (response as any).description
+          description: response.data.description
         }));
+        toast.success('作品简介生成成功！');
       } else {
-        alert('生成失败: ' + (response.error || '未知错误'));
+        toast.error('生成失败: ' + (response.data?.error || '未知错误'));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('生成作品简介失败:', error);
-      alert('生成失败，请重试');
+      toast.error('生成失败: ' + (error.message || '请重试'));
     } finally {
       setLoading(false);
     }

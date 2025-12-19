@@ -109,7 +109,10 @@ api.interceptors.response.use(
       // Token过期或无效，清除本地认证信息
       Cookies.remove('auth_token')
       Cookies.remove('login_type')
-      window.location.href = '/login'
+      // 只在不是登录页面时才重定向
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error.response || error)
   }
@@ -119,7 +122,7 @@ api.interceptors.response.use(
 export const authAPI = {
   // 钱包登录
   walletLogin: (data: WalletLoginRequest) =>
-    api.post<WalletLoginResponse>('/api/auth/wallet-login', data).then(r => r.data as WalletLoginResponse),
+    api.post<WalletLoginResponse>('/api/auth/wallet-login', data),
 
   // 邮箱注册
   emailRegister: (data: EmailRegisterRequest) =>
@@ -208,6 +211,16 @@ export const aiAPI = {
   // 欢迎消息
   getWelcomeMessage: (data: { email: string; walletAddress: string; isNewUser?: boolean }) =>
     api.post('/api/ai/welcome-message', data),
+
+  // 内容合规检测
+  checkContentCompliance: (formData: FormData) =>
+    api.post('/api/ai/check-content', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+
+  // 授权类型建议
+  getLicenseAdvice: (data: { title: string; description: string; category: string; isDerivative: boolean }) =>
+    api.post('/api/ai/license-advice', data),
 }
 
 // 交易API
@@ -235,6 +248,10 @@ export const transactionAPI = {
   // 获取余额
   getBalance: () =>
     api.get('/api/transactions/balance'),
+
+  // 获取用户作品
+  getUserWorks: () =>
+    api.get('/api/transactions/works'),
 
   // 估算费用
   estimateCost: (data: { contractAddress: string; abi: any[]; methodName: string; params?: any[]; value?: string }) =>
@@ -286,6 +303,29 @@ export const marketplaceAPI = {
   // 获取市场统计
   getStats: () =>
     api.get('/api/marketplace/stats'),
+}
+
+// 上传API
+export const uploadAPI = {
+  // 上传文件到IPFS
+  uploadFile: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    return api.post('/api/upload/ipfs', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  },
+
+  // 上传元数据到IPFS
+  uploadMetadata: (metadata: any) =>
+    api.post('/api/upload/metadata', { metadata }),
+
+  // 检查上传状态
+  checkStatus: (hash: string) =>
+    api.get(`/api/upload/status/${hash}`),
 }
 
 // CyberGraph API

@@ -1,0 +1,46 @@
+{
+  "1": {
+    "id": 1,
+    "creator": "user_kjag7w9lx",
+    "licenseFee": "10000000000000",
+    "derivativeAllowed": true,
+    "metadataURI": "ipfs://mock-hash-1766098502019",
+    "isOriginal": true,
+    "parentId": null,
+    "createdAt": "2025-12-18T22:55:02.029Z",
+    "txHash": "0x9ec6214f4b4c98"
+  },
+  "2": {
+    "id": 2,
+    "creator": "user_wbj3pgdrm",
+    "licenseFee": "10000000000000",
+    "derivativeAllowed": true,
+    "metadataURI": "ipfs://mock-hash-1766101779637",
+    "isOriginal": true,
+    "parentId": null,
+    "createdAt": "2025-12-18T23:49:39.647Z",
+    "txHash": "0x66260add9fddd"
+  },
+  "3": {
+    "id": 3,
+    "creator": "user_gk1g6m8vh",
+    "licenseFee": "10000000000000000",
+    "derivativeAllowed": true,
+    "metadataURI": "ipfs://mock-hash-1766102327031",
+    "isOriginal": true,
+    "parentId": null,
+    "createdAt": "2025-12-18T23:58:47.040Z",
+    "txHash": "0x780c44ef03a0b"
+  },
+  "4": {
+    "id": 4,
+    "creator": "user_x5us8069p",
+    "licenseFee": "10000000000000000",
+    "derivativeAllowed": true,
+    "metadataURI": "ipfs://mock-hash-1766102482133",
+    "isOriginal": true,
+    "parentId": null,
+    "createdAt": "2025-12-19T00:01:22.143Z",
+    "txHash": "0xc449199344cdf"
+  }
+}

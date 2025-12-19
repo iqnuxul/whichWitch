@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // 发送到后端验证
       const response = await authAPI.walletLogin({
-        walletAddress: address,
+        address: address,
         signature,
         message
       })

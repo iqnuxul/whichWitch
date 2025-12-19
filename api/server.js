@@ -1,4 +1,5 @@
 // Vercel serverless function entry point
+require('dotenv').config({ path: '.env.local' });
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -7,6 +8,8 @@ const path = require('path');
 const blockchainRoutes = require('../src/backend/routes/blockchain');
 const aiRoutes = require('../src/backend/routes/ai');
 const authRoutes = require('../src/backend/routes/auth');
+const uploadRoutes = require('../src/backend/routes/upload');
+const transactionRoutes = require('../src/backend/routes/simpleTransactions');
 
 const app = express();
 
@@ -22,6 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -48,6 +53,18 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
+
+// Start server for local development
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`🚀 whichWitch API server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🤖 AI endpoints: http://localhost:${PORT}/api/ai`);
+    console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
+    console.log(`⛓️ Blockchain endpoints: http://localhost:${PORT}/api/blockchain`);
+  });
+}
 
 // Export for Vercel
 module.exports = app;
